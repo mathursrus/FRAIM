@@ -1,0 +1,41 @@
+---
+description: Issue resolution process for local development with branch/clone approach
+alwaysApply: true
+---
+
+# Issue Resolution Process
+
+Always work on the feature branch for the current issue: `feature/<issue#>-<kebab-title>`. Never push to master.
+
+## Development Workflow
+1. **Clone Setup**: Work in your own cloned repository folder.
+2. **Branch Management**: Create/checkout feature branch for your issue
+3. **Local Development**: Make changes, run tests locally
+4. **Check before commit**: Only commit after approval from the user.
+5. **Remote Coordination**: Use GitHub MCP for issue labels
+
+## Phases
+- **Design**: Set ISSUE to `phase:design` → create RFC
+- **Implementation**: Set ISSUE to `phase:impl` → implement solution
+
+## Status Management
+- **WIP**: Automatically set when entering new phase
+- **Needs Review**: Set this when work is ready for review
+- **Complete**: Automatically set when PR is approved
+
+## PR Requirements
+- Implementation PR body MUST include `Closes #<n>`
+- Let Actions handle PR creation and updates
+- Address all reviewer feedback before completion
+
+## Cleanup
+When user confirms code is correctly merged into master, confirm with the user, then 
+- delete remote branch
+- delete local branch
+- remove your local clone folder:
+```
+cd ..
+Remove-Item -Recurse -Force "<repo> - Issue {issue_number}"
+```
+
+Respect CODEOWNERS; don't modify auth/CI without approval.

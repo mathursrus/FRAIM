@@ -1,0 +1,20 @@
+---
+description: Prep environment for issue
+auto_execution_mode: 3
+---
+
+Step 1: Ask for {issue_number}
+
+Step 2: Clone the repo to "<repo> - Issue {issue_number}" 
+- **CRITICAL**: Clone ONE LEVEL ABOVE the current workspace directory
+- **DO NOT** clone inside the current workspace folder
+- **VERIFY LOCATION**: Use `pwd` to confirm you're in the parent directory before cloning
+
+Step 3: Confirm items in the checklist and say "Huzzah!"
+
+
+## Safety Checklist
+- [ ] Confirmed current workspace path with `pwd`
+- [ ] Changed to parent directory (`cd ..`) before cloning
+- [ ] Verified clone location is outside current workspace
+- [ ] Successfully changed into cloned repository

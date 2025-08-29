@@ -1,0 +1,50 @@
+{
+  "name": "fraim-framework",
+  "version": "1.0.12",
+  "description": "FRAIM: Framework for Rigor-based AI Management - Where humans become AI managers through rigorous methodology",
+  "main": "index.js",
+  "bin": {
+    "fraim": "./bin/fraim.js",
+    "fraim-setup": "./bin/fraim.js"
+  },
+  "scripts": {
+    "setup": "node setup.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "echo '🚀 FRAIM installed! Run: npx fraim-framework --help'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mathursrus/Ashley-Calendar-AI.git",
+    "directory": "FRAIM"
+  },
+  "keywords": [
+    "fraim",
+    "ai-management",
+    "ai-coordination",
+    "ai-agents",
+    "multi-agent",
+    "github",
+    "workflow",
+    "automation",
+    "gitops",
+    "cursor",
+    "claude",
+    "windsurf",
+    "rigor",
+    "enterprise",
+    "framework",
+    "ai-managers"
+  ],
+  "author": "Sid Mathur <sid.mathur@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mathursrus/Ashley-Calendar-AI/issues"
+  },
+  "homepage": "https://github.com/mathursrus/Ashley-Calendar-AI/tree/master/FRAIM#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

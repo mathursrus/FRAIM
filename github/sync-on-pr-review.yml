@@ -1,0 +1,66 @@
+name: Sync Issue on PR Review
+on:
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: review-sync-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  sync-on-review:
+    runs-on: ubuntu-latest
+    # no job-level `if` — we branch inside the script
+    env:
+      GH_TOKEN: ${{ secrets.PR_AUTOMATION_TOKEN || secrets.GITHUB_TOKEN }}
+      REPO: ${{ github.repository }}
+    steps:
+      - name: Derive review state, issue number, and branch
+        id: vars
+        shell: bash
+        run: |
+          set -euo pipefail
+          STATE="${{ github.event.review.state }}"
+          BR="${{ github.event.pull_request.head.ref }}"   # e.g., feature/26-slug
+          ISSUE="$(sed -nE 's#^feature/([0-9]+)-.*#\1#p' <<< "$BR" || true)"
+          echo "state=$STATE" >> $GITHUB_OUTPUT
+          echo "issue=$ISSUE" >> $GITHUB_OUTPUT
+          echo "branch=$BR" >> $GITHUB_OUTPUT
+          echo "Detected review state: $STATE; branch: $BR; issue: $ISSUE"
+
+      - name: Handle review states
+        if: steps.vars.outputs.issue != ''
+        shell: bash
+        env:
+          STATE:  ${{ steps.vars.outputs.state }}
+          ISSUE:  ${{ steps.vars.outputs.issue }}
+          PRNUM:  ${{ github.event.pull_request.number }}
+          REPO:   ${{ env.REPO }}
+        run: |
+          set -euo pipefail
+          case "$STATE" in
+            changes_requested)
+              # Flip to WIP
+              gh issue edit "$ISSUE" --repo "$REPO" \
+                --add-label "status:wip" --remove-label "status:needs-review" --remove-label "status:complete" || true
+              gh pr edit "$PRNUM" --repo "$REPO" \
+                --add-label "status:wip" --remove-label "status:needs-review" --remove-label "status:complete" || true
+              ;;
+            approved)
+              # Flip to Complete
+              gh issue edit "$ISSUE" --repo "$REPO" \
+                --add-label "status:complete" --remove-label "status:wip" --remove-label "status:needs-review" || true
+              gh pr edit "$PRNUM" --repo "$REPO" --add-label "status:complete" --remove-label "status:wip" --remove-label "status:needs-review" || true
+              ;;
+            commented)
+              # No-op; comments don’t change state
+              echo "Review was 'commented' — no state change."
+              ;;
+            *)
+              echo "Unknown review state: $STATE"
+              ;;
+          esac

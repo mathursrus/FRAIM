@@ -1,0 +1,218 @@
+name: Phase Change Handler
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  issues: write
+  pull-requests: write
+  contents: write
+
+jobs:
+  handle-phase-change:
+    runs-on: ubuntu-latest
+    if: |
+      contains(github.event.label.name, 'phase:') ||
+      (github.event.action == 'unlabeled' && contains(github.event.label.name, 'phase:'))
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Auth GitHub CLI
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
+      - name: Extract issue details
+        id: issue-details
+        run: |
+          ISSUE_NUMBER="${{ github.event.issue.number }}"
+          ISSUE_TITLE="${{ github.event.issue.title }}"
+          BRANCH_NAME="feature/${ISSUE_NUMBER}-$(echo "$ISSUE_TITLE" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g')"
+          
+          echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "issue_title=$ISSUE_TITLE" >> $GITHUB_OUTPUT
+
+      - name: Determine current phase
+        id: current-phase
+        run: |
+          LABELS='${{ toJson(github.event.issue.labels) }}'
+          CURRENT_PHASE=""
+          
+          # Extract current phase from labels
+          for label in $(echo "$LABELS" | jq -r '.[].name'); do
+            if [[ $label == phase:* ]]; then
+              CURRENT_PHASE=$label
+              break
+            fi
+          done
+          
+          echo "current_phase=$CURRENT_PHASE" >> $GITHUB_OUTPUT
+          echo "Current phase: $CURRENT_PHASE"
+
+      - name: Ensure branch exists and sync
+        run: |
+          BRANCH_NAME="${{ steps.issue-details.outputs.branch_name }}"
+          BASE="master"
+    
+          git fetch origin "$BASE"
+    
+          if git ls-remote --exit-code --heads origin "$BRANCH_NAME" >/dev/null 2>&1; then
+              echo "Branch $BRANCH_NAME exists, syncing..."
+              git fetch origin "$BRANCH_NAME"
+              git switch "$BRANCH_NAME"
+              git pull --rebase origin "$BRANCH_NAME"
+          else
+              echo "Branch $BRANCH_NAME does not exist, creating from $BASE..."
+              git switch -c "$BRANCH_NAME" "origin/$BASE"
+              git push -u origin "$BRANCH_NAME"
+          fi
+
+            # Design: add EMPTY commit to guarantee a diff
+      - name: phase:design → ensure empty commit (commit if missing)
+        if: steps.current-phase.outputs.current_phase == 'phase:design'
+        shell: bash
+        env:
+          ISSUE: ${{ github.event.issue.number }}
+        run: |
+          ISSUE_NUMBER="${{ steps.issue-details.outputs.issue_number }}"
+          ISSUE_TITLE="${{ steps.issue-details.outputs.issue_title }}"
+          BRANCH_NAME="${{ steps.issue-details.outputs.branch_name }}"
+          
+          # Create empty commit to guarantee branch has commits
+          git commit --allow-empty -m "Design phase initiated for Issue #$ISSUE_NUMBER: $ISSUE_TITLE"
+          git push origin "$BRANCH_NAME"
+          
+          # Create or update Design PR
+          PR_TITLE="[Design] RFC for Issue #$ISSUE_NUMBER: $ISSUE_TITLE"
+          PR_BODY="## Design RFC for Issue #$ISSUE_NUMBER
+
+          This PR contains the design RFC for: $ISSUE_TITLE
+
+          **Phase:** Design
+          **Issue:** #$ISSUE_NUMBER
+          **Branch:** \`$BRANCH_NAME\`
+
+          ### RFC Document
+          - 📋 [RFC Document]($RFC_FILE)
+
+          **Note:** This is a Design PR. Implementation will follow in a separate PR after design approval.
+
+          "
+
+          # Check if PR already exists
+          EXISTING_PR=$(gh pr list --head "$BRANCH_NAME" --json number --jq '.[0].number' 2>/dev/null || echo "")
+          
+          if [ -n "$EXISTING_PR" ]; then
+            echo "Updating existing PR #$EXISTING_PR"
+            gh pr edit "$EXISTING_PR" --title "$PR_TITLE" --body "$PR_BODY"
+            gh pr edit "$EXISTING_PR" --add-label "phase:design" --remove-label "phase:tests" --remove-label "phase:impl" 
+          else
+            echo "Creating new Design PR"
+            gh pr create --title "$PR_TITLE" --body "$PR_BODY" --base master --head "$BRANCH_NAME" --draft
+            # Add labels to the new PR
+            sleep 2  # Brief delay to ensure PR is created
+            NEW_PR=$(gh pr list --head "$BRANCH_NAME" --json number --jq '.[0].number')
+            gh pr edit "$NEW_PR" --add-label "phase:design" --remove-label "phase:tests" --remove-label "phase:impl" 
+          fi
+
+      - name: Handle test phase
+        if: steps.current-phase.outputs.current_phase == 'phase:tests'
+        run: |
+          ISSUE_NUMBER="${{ steps.issue-details.outputs.issue_number }}"
+          ISSUE_TITLE="${{ steps.issue-details.outputs.issue_title }}"
+          BRANCH_NAME="${{ steps.issue-details.outputs.branch_name }}"
+          
+          # Create or update Test Implementation PR
+          PR_TITLE="[Testing] Test Cases for Issue #$ISSUE_NUMBER: $ISSUE_TITLE"
+          PR_BODY="## Test cases for Issue #$ISSUE_NUMBER
+
+          This PR contains the test cases for: $ISSUE_TITLE
+
+          **Phase:** Tests
+          **Issue:** #$ISSUE_NUMBER
+          **Branch:** \`$BRANCH_NAME\`
+
+          ### Test Cases
+    
+
+          **Note:** This is a Test PR. Implementation will follow after test approval.
+
+          "
+
+          # Check if PR already exists
+          EXISTING_PR=$(gh pr list --head "$BRANCH_NAME" --json number --jq '.[0].number' 2>/dev/null || echo "")
+          
+          if [ -n "$EXISTING_PR" ]; then
+            echo "Updating existing PR #$EXISTING_PR"
+            gh pr edit "$EXISTING_PR" --title "$PR_TITLE" --body "$PR_BODY"
+            gh pr edit "$EXISTING_PR" --add-label "phase:tests" --remove-label "phase:design" --remove-label "phase:impl"
+          else
+            echo "Creating new Test Plan PR"
+            gh pr create --title "$PR_TITLE" --body "$PR_BODY" --base master --head "$BRANCH_NAME" --draft
+            # Add labels to the new PR
+            sleep 2  # Brief delay to ensure PR is created
+            NEW_PR=$(gh pr list --head "$BRANCH_NAME" --json number --jq '.[0].number')
+            gh pr edit "$NEW_PR" --add-label "phase:tests" --remove-label "phase:design" --remove-label "phase:impl"
+          fi
+
+      - name: Handle implementation phase
+        if: steps.current-phase.outputs.current_phase == 'phase:impl'
+        run: |
+          ISSUE_NUMBER="${{ steps.issue-details.outputs.issue_number }}"
+          ISSUE_TITLE="${{ steps.issue-details.outputs.issue_title }}"
+          BRANCH_NAME="${{ steps.issue-details.outputs.branch_name }}"
+          
+          # Create or update Implementation PR
+          PR_TITLE="[Implementation] Fixes for Issue #$ISSUE_NUMBER: $ISSUE_TITLE"
+          PR_BODY="## Fixes for Issue #$ISSUE_NUMBER
+
+          This PR contains the fixes for: $ISSUE_TITLE
+
+          **Phase:** Implementation
+          **Issue:** #$ISSUE_NUMBER
+          **Branch:** \`$BRANCH_NAME\`
+
+          ### Fixes
+          
+
+          Closes #$ISSUE_NUMBER
+
+          "
+
+          # Check if PR already exists
+          EXISTING_PR=$(gh pr list --head "$BRANCH_NAME" --json number --jq '.[0].number' 2>/dev/null || echo "")
+          
+          if [ -n "$EXISTING_PR" ]; then
+            echo "Updating existing PR #$EXISTING_PR"
+            gh pr edit "$EXISTING_PR" --title "$PR_TITLE" --body "$PR_BODY"
+            gh pr edit "$EXISTING_PR" --add-label "phase:impl" --remove-label "phase:design" --remove-label "phase:tests"
+          else
+            echo "Creating new Implementation PR"
+            gh pr create --title "$PR_TITLE" --body "$PR_BODY" --base master --head "$BRANCH_NAME" --draft
+            # Add labels to the new PR
+            sleep 2  # Brief delay to ensure PR is created
+            NEW_PR=$(gh pr list --head "$BRANCH_NAME" --json number --jq '.[0].number')
+            gh pr edit "$NEW_PR" --add-label "phase:impl" --remove-label "phase:design" --remove-label "phase:tests"
+          fi
+
+      - name: Normalize ISSUE and PR status to WIP (authoritative)
+        run: |
+          gh issue edit ${{ github.event.issue.number }} --add-label "status:wip" --remove-label "status:needs-review" --remove-label "status:complete" || true
+          
+          # Get the PR number for the current branch and normalize its status
+          BRANCH_NAME="${{ steps.issue-details.outputs.branch_name }}"
+          PR_NUMBER=$(gh pr list --head "$BRANCH_NAME" --json number --jq '.[0].number' 2>/dev/null || echo "")
+          
+          if [ -n "$PR_NUMBER" ]; then
+            gh pr edit "$PR_NUMBER" --add-label "status:wip" --remove-label "status:needs-review" --remove-label "status:complete" || true
+          fi

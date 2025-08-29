@@ -1,0 +1,147 @@
+name: Setup FRAIM
+
+on:
+  workflow_dispatch:
+    inputs:
+      agents:
+        description: 'AI Agents to enable'
+        required: true
+        default: 'cursor,claude,windsurf'
+        type: choice
+        options:
+        - 'cursor,claude,windsurf'
+        - 'cursor,claude'
+        - 'cursor,windsurf'
+        - 'claude,windsurf'
+        - 'cursor'
+        - 'claude'
+        - 'windsurf'
+      enable_deployments:
+        description: 'Enable deployment workflows'
+        required: false
+        default: false
+        type: boolean
+      dry_run:
+        description: 'Dry run (preview changes only)'
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  setup-fraim:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install FRAIM
+        run: |
+          # Download and install FRAIM framework
+          curl -sSL https://github.com/mathursrus/Ashley-Calendar-AI/archive/master.tar.gz | tar -xz --strip-components=2 Ashley-Calendar-AI-master/FRAIM/
+          
+          # Create configuration
+          cat > fraim-config.json << EOF
+          {
+            "repository": {
+              "owner": "${{ github.repository_owner }}",
+              "name": "${{ github.event.repository.name }}",
+              "branch": "${{ github.event.repository.default_branch }}"
+            },
+            "features": {
+              "labels": true,
+              "workflows": true,
+              "agentRules": [${{ github.event.inputs.agents }}],
+              "deployments": {
+                "enabled": ${{ github.event.inputs.enable_deployments }}
+              }
+            }
+          }
+          EOF
+
+      - name: Run FRAIM Setup
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPO="${{ github.repository }}"
+          
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            echo "🧪 Running in dry-run mode..."
+            node setup.js --repo "$REPO" --config fraim-config.json --dry-run --verbose
+          else
+            echo "🚀 Setting up FRAIM framework..."
+            node setup.js --repo "$REPO" --config fraim-config.json --verbose
+          fi
+
+      - name: Create Success Issue
+        if: github.event.inputs.dry_run == 'false'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🎉 FRAIM Setup Complete!',
+              body: `## FRAIM Successfully Installed! 🚀
+
+            Your repository is now equipped with the FRAIM framework for Rigor-based AI Management.
+
+            ### What's Been Set Up
+            - ✅ **GitHub Labels**: Phase, status, agent, and priority labels
+            - ✅ **Workflows**: Automated branch and PR management
+            - ✅ **Agent Configs**: ${{ github.event.inputs.agents }} agent configurations
+            - ✅ **Documentation**: Templates and guides
+
+            ### Next Steps
+            1. **Create an issue** for your first task
+            2. **Add phase label**: \`phase:design\`, \`phase:impl\`, or \`phase:tests\`
+            3. **Add agent label**: \`ai-agent:cursor\`, \`ai-agent:claude\`, or \`ai-agent:windsurf\`
+            4. **Watch the automation** create branches and PRs automatically!
+
+            ### Example Workflow
+            \`\`\`
+            1. Create issue: "Add user authentication feature"
+            2. Add labels: "phase:design" + "ai-agent:claude"
+            3. GitHub creates branch: feature/123-add-user-authentication-feature
+            4. Claude creates RFC and marks "status:needs-review"
+            5. After approval, change to "phase:impl" + "ai-agent:cursor"
+            6. Cursor implements the feature and tests
+            7. Code review and merge!
+            \`\`\`
+
+            ### Resources
+            - 📚 [FRAIM Documentation](https://github.com/mathursrus/Ashley-Calendar-AI/tree/master/FRAIM)
+            - 🤖 [Agent Coordination Guide](https://github.com/mathursrus/Ashley-Calendar-AI/tree/master/FRAIM/docs/guides)
+            - 🏗️ [Architecture Overview](https://github.com/mathursrus/Ashley-Calendar-AI/tree/master/FRAIM/docs/architecture)
+
+            **Welcome to the future of AI management!** 🤖✨`,
+              labels: ['phase:design', 'status:complete', 'documentation']
+            });
+
+      - name: Setup Summary
+        if: always()
+        run: |
+          echo "## 🎯 FRAIM Setup Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Repository**: ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Agents**: ${{ github.event.inputs.agents }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployments**: ${{ github.event.inputs.enable_deployments }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Dry Run**: ${{ github.event.inputs.dry_run }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            echo "✅ **Dry run completed successfully!**" >> $GITHUB_STEP_SUMMARY
+            echo "Re-run this workflow with 'Dry run' unchecked to apply changes." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "🚀 **FRAIM setup completed!**" >> $GITHUB_STEP_SUMMARY
+            echo "Check the issues tab for your welcome issue with next steps." >> $GITHUB_STEP_SUMMARY
+          fi

@@ -1,0 +1,26 @@
+---
+description: Start implementing the solution
+alwaysApply: false
+---
+Step 1: Ask for {issue_number} (and optional {slug}); confirm target branch feature/{issue_number}-{slug}.
+
+Step 2: Ensure the branch exists (your GitHub Action will usually auto-create it) and checkout it. 
+
+Step 3: Label the issue 'phase:impl'. (GitHub Action will automatically label the issue `status:wip`, create a draft PR)
+
+Step 4: Do your work either remotely or locally as defined by the user. If unsure, ask the user. Once sure, let the user know.
+
+Step 5: Your work entails the following
+
+ - Review the RFC associated with this issue.
+
+ - Determine whether changes need to be made to existing code, or brand new code needs to be written.
+
+ - Write the minimal set of code and test cases needed for this issue.
+
+ - **Test cases must inherit from test-utils and follow the structure of the rest of the test suite**
+ - Ensure test cases pass.
+
+ - When ready for review, flip issue to 'status:needs-review' and remove 'status:wip'
+
+Step 6: If workflow actions or reviewer feedback indicates more work is needed, ensure the issue is set back to `status:wip` and continue working as above.

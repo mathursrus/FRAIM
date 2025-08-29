@@ -1,0 +1,49 @@
+---
+description: Architecture principles and guidelines
+alwaysApply: true
+---
+
+# Architecture
+
+## Intent
+Keep the architecture clean: use BAML (LLM) for any natural-language understanding, fuzzy matching, or semantic comparison. Use deterministic TypeScript only for side-effectful or strictly rule-based work (APIs, DB, validation, formatting, scheduling, retries).
+
+## Principles (follow in this order)
+1. Parse (LLM/BAML) → 2. Normalize (deterministic) → 3. Validate (deterministic) → 4. Decide (LLM if subjective; code if rules) → 5. Act (deterministic side effects)
+
+## LLM/BAML Usage
+- Entity/intent extraction, timezone/place inference, date/time range interpretation
+- Participant role classification, preference inference, text similarity
+- De-dupe by meaning, natural language understanding
+
+## Deterministic TypeScript Usage
+- ISO date math, schema validation, authZ/authN, idempotency keys
+- OpenAPI I/O, DB writes, calendar invites, retries/timeouts
+- Metrics/telemetry, side effects
+
+## Do / Don't
+
+### Do (LLM/BAML)
+- NLP; Anything that needs understanding from user unstructured input
+
+### Do (Deterministic TS)
+- Ensure structure through interfaces, folder management, test cases
+
+### Don't
+- Don't hand-roll regex/heuristics for dates/locations/intent
+- Don't duplicate LLM functionality
+- Don't call BAML for pure formatting (e.g., toISOString, trimming)
+
+## Project Structure
+- **BAML sources**: `/baml_src/**/*.baml`
+- **Generated client**: `/baml_client/**` (run `baml-cli generate`)
+- **Deterministic logic**: `/src/**`
+- **Design docs + Test plans**: `/docs/rfcs/*.md`
+- **Random utility scripts**: `/scripts` 
+- **Test cases**: `/` (at root level, these are the most important artifacts)
+
+## Local Development Notes
+- Test deterministic logic with unit tests before integrating with LLM components
+- Write test cases for each change. Tag representative ones with 'smoke'
+- Keep architecture boundaries clear between LLM and deterministic code
+- Document any architectural decisions in your RFC or implementation notes
