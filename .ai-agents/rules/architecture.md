@@ -1,26 +1,78 @@
 # Architecture
 
-Maintain clean architectural boundaries by using appropriate technologies for each task.
+## INTENT
+To maintain clean architectural boundaries by using appropriate technologies for each task, ensuring optimal performance and maintainability.
 
-## Core Principles
+## PRINCIPLES
+- **Separation of Concerns**: Keep different parts of the system focused on their specific responsibilities
+- **Performance First**: Use deterministic code for predictable operations
+- **Maintainability**: Clear boundaries between components
+- **Consistency**: Follow established patterns
+- **Testability**: Keep logic easily testable
 
-1. **Separation of Concerns**: Keep different parts of the system focused on their specific responsibilities.
-2. **Clean Interfaces**: Define clear interfaces between components.
-3. **Appropriate Technologies**: Use the right tool for each job.
-4. **Testability**: Design components to be easily testable.
-5. **Scalability**: Consider how the architecture will scale with increased load or complexity.
+## ARCHITECTURAL PIPELINE
+1. **Parse** → 2. **Normalize** → 3. **Validate** → 4. **Decide** → 5. **Act**
 
-## Guidelines
+## Do / Don't
 
-- **Domain-Driven Design**: Model the system around the business domain
-- **Layered Architecture**: Maintain clear separation between layers
-- **Dependency Injection**: Use dependency injection for flexible component composition
-- **Interface-First Design**: Define interfaces before implementations
-- **Consistent Patterns**: Apply consistent patterns throughout the codebase
+### Do
+- Extract meaningful information from user inputs
+- Classify user intent and preferences
+- Compare similar items for equivalence or differences
+- Convert parsed data to standard formats
+- Enforce schemas and reject malformed inputs
+- Handle external communications and data storage
+- Understand the way the codebase is structured
 
-## Technology Selection
+### Don't
+- Don't hand-roll complex parsing logic when better tools exist
+- Don't duplicate functionality
+- Don't use complex tools for simple operations
 
-- Use natural language processing technologies for language understanding tasks
-- Use deterministic code for business logic and data processing
-- Select appropriate data storage technologies based on access patterns
-- Choose UI frameworks based on application requirements and team expertise
+## Project Structure
+- **Rules**: `/.ai-agents/rules/**/*.md`
+- **Workflows**: `/workflows/**/*.md`
+- **Templates**: `/templates/**/*.md`
+- **Scripts**: `/scripts/**/*.sh`
+- **GitHub Configuration**: `/.github/**/*`
+
+## EXAMPLES
+
+### Good: Proper Architecture Usage
+```typescript
+// ✅ Appropriate tool for understanding
+const intent = extractIntent(userMessage);
+
+// ✅ Deterministic for processing
+const normalizedData = convertToStandardFormat(parsedData);
+const validationResult = validateData(normalizedData);
+
+// ✅ Appropriate tool for decision making
+const decision = decideNextAction(validationResult, preferences);
+
+// ✅ Deterministic for execution
+executeAction(decision);
+```
+
+### Bad: Architecture Violations
+```typescript
+// ❌ Using complex tools for simple operations
+const formatted = useComplexParserForSimpleFormat(date);
+
+// ❌ Using inappropriate tools for complex understanding
+const intent = parseWithRegex(complexUserMessage);
+
+// ❌ Mixing concerns in single function
+async function handleEverything() {
+  const intent = extractIntent();
+  const normalized = normalize();
+  const decision = decide();
+  await execute();
+  // Should be split into pipeline steps
+}
+```
+
+## Local Development Notes
+- Test deterministic logic with unit tests before integrating with other components
+- Keep architecture boundaries clear between different system components
+- Document any architectural decisions in your RFC or implementation notes
