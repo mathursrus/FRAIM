@@ -225,7 +225,7 @@ When work is complete, clean up your environment:
 cd ..
 
 # Remove your local clone folder
-rm -rf "{PROJECT_NAME} - Issue {issue_number}"
+rm -rf \"{PROJECT_NAME} - Issue {issue_number}\"
 ```
 
 ### Branch Cleanup
