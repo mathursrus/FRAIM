@@ -63,12 +63,12 @@ function copyDirectory(src, dest) {
     if (!fs.existsSync(dest)) {
         fs.mkdirSync(dest, { recursive: true });
     }
-    
+
     const items = fs.readdirSync(src);
     for (const item of items) {
         const srcPath = path.join(src, item);
         const destPath = path.join(dest, item);
-        
+
         if (fs.statSync(srcPath).isDirectory()) {
             copyDirectory(srcPath, destPath);
         } else {
@@ -84,7 +84,7 @@ function askQuestion(question, defaultValue = 'y') {
             input: process.stdin,
             output: process.stdout
         });
-        
+
         const defaultText = defaultValue ? ` (${defaultValue})` : '';
         rl.question(`${question}${defaultText}: `, (answer) => {
             rl.close();
@@ -95,24 +95,21 @@ function askQuestion(question, defaultValue = 'y') {
 }
 
 function createProjectStructure() {
-    // Create retrospectives folder
+    // Create directories
     ensureDirectory('retrospectives');
-    logSuccess('Created retrospectives folder');
-    
-    // Create docs/rfcs folder
     ensureDirectory('docs/rfcs');
-    logSuccess('Created docs/rfcs folder');
+    ensureDirectory('rules');
+    ensureDirectory('templates/evidence');
+    ensureDirectory('templates/retrospective');
+    ensureDirectory('templates/specs');
+    ensureDirectory('templates/help');
+    ensureDirectory('workflows');
+    ensureDirectory('.github/workflows');
     
+    logSuccess('Created directory structure');
+
     // Create BUGFIX template
-    const bugfixTemplate = `Issue: #<issue>  
-
-## Impact of the Bug
-
-## Repro Steps
-
-## Root Cause
-
-## Fix
+    const bugfixTemplate = `Issue: #<issue>"
 
 ## Tests
 - Could be existing tests that are failing and need to be fixed
@@ -121,22 +118,12 @@ function createProjectStructure() {
 `;
     writeFile('docs/rfcs/BUGFIX-TEMPLATE.md', bugfixTemplate);
     logSuccess('Created BUGFIX-TEMPLATE.md');
-    
+
     // Create RFC template
     const rfcTemplate = `# RFC: <Title>
 
 Issue: #<issue>  
 Owner: <agent>
-
-## Customer 
-
-## Customer Outcome
-
-## Customer Problem being solved
-
-## Solution
-
-## Alternatives
 
 ## Design Details
 - User Experience changes (incl. all modalities currently supported: see codebase to know which ones)
@@ -148,335 +135,228 @@ Owner: <agent>
 ## Test Matrix
 - Unit: modules & edge cases
 - Integration: API <-> DB <-> external
-- E2E: user flows (happy/sad)
-
-## Risks & Mitigations
-
-## Observability (logs, metrics, alerts)
-
-## Phased Delivery Plan
-- Do not incude timelines
-- Do include the following for each phase:
-  - Deliverable
-  - Value delivered by deliverable
-  - What will be tested
-`;
+- E2E: user flows (happy/sad)`;
     writeFile('docs/rfcs/RFC-TEMPLATE.md', rfcTemplate);
     logSuccess('Created RFC-TEMPLATE.md');
-    
-    logSuccess('Project structure created');
-}
 
-async function setupGitHubCLI() {
-    logStep('GitHub CLI Setup');
-    logInfo('To create GitHub labels automatically, you need GitHub CLI installed and authenticated.');
-    
-    // Check if gh is installed
-    try {
-        execSync('gh --version', { stdio: 'pipe' });
-        logSuccess('GitHub CLI is already installed');
-    } catch (error) {
-        logWarning('GitHub CLI is not installed');
-        logInfo('Installing GitHub CLI...');
-        logInfo('📥 Download from: https://cli.github.com/');
-        logInfo('💻 Or use package manager:');
-        logInfo('   Windows: winget install GitHub.cli');
-        logInfo('   macOS: brew install gh');
-        logInfo('   Ubuntu/Debian: sudo apt install gh');
-        logInfo('   CentOS/RHEL: sudo yum install gh');
-        
-        const waitForInstall = await askQuestion('Press Enter after installing GitHub CLI, or type "skip" to continue without it');
-        if (waitForInstall === 'skip') {
-            return false;
-        }
-        
-        // Check again
-        try {
-            execSync('gh --version', { stdio: 'pipe' });
-            logSuccess('GitHub CLI is now available');
-        } catch (error) {
-            logWarning('GitHub CLI still not available, continuing without it');
-            return false;
-        }
-    }
-    
-    // Check if authenticated
-    try {
-        execSync('gh auth status', { stdio: 'pipe' });
-        logSuccess('GitHub CLI is already authenticated');
-        return true;
-    } catch (error) {
-        logWarning('GitHub CLI is not authenticated');
-        logInfo('You need to authenticate with GitHub to create labels automatically.');
-        logInfo('🔐 Run: gh auth login');
-        logInfo('   This will open a browser for OAuth authentication');
-        
-        const waitForAuth = await askQuestion('Press Enter after authenticating, or type "skip" to continue without authentication');
-        if (waitForAuth === 'skip') {
-            return false;
-        }
-        
-        // Check authentication again
-        try {
-            execSync('gh auth status', { stdio: 'pipe' });
-            logSuccess('GitHub CLI is now authenticated');
-            return true;
-        } catch (error) {
-            logWarning('GitHub CLI authentication failed, continuing without it');
-            return false;
-        }
-    }
-}
-
-function createGitHubLabels() {
-    const labels = [
-        { name: 'phase:design', color: '0e8a16', description: 'Design phase - RFC creation and review' },
-        { name: 'phase:impl', color: '1d76db', description: 'Implementation phase - coding and testing' },
-        { name: 'phase:tests', color: 'fef2c0', description: 'Testing phase - validation and QA' },
-        { name: 'status:wip', color: 'fbca04', description: 'Work in progress' },
-        { name: 'status:needs-review', color: 'd93f0b', description: 'Ready for review' },
-        { name: 'status:complete', color: '0e8a16', description: 'Completed and approved' },
-        { name: 'status:changes-requested', color: 'd93f0b', description: 'Changes requested in review' },
-        { name: 'ai-agent:cursor', color: '5319e7', description: 'Assigned to Cursor AI agent' },
-        { name: 'ai-agent:claude', color: 'c2e0c6', description: 'Assigned to Claude AI agent' },
-        { name: 'ai-agent:windsurf', color: 'bfdadc', description: 'Assigned to Windsurf AI agent' }
-    ];
-
-    logInfo('Creating GitHub labels...');
-    
-    for (const label of labels) {
-        try {
-            const command = `gh label create "${label.name}" --color "${label.color}" --description "${label.description}"`;
-            execSync(command, { stdio: 'pipe' });
-            logSuccess(`Created label: ${label.name}`);
-        } catch (error) {
-            if (error.message.includes('already exists')) {
-                logInfo(`Label already exists: ${label.name}`);
-            } else {
-                logWarning(`Failed to create label ${label.name}: ${error.message}`);
-            }
-        }
-    }
-    
-    logSuccess('GitHub labels created');
-}
-
-function createLabelsConfigFile() {
-    const labels = [
-        { name: 'phase:design', color: '0e8a16', description: 'Design phase - RFC creation and review' },
-        { name: 'phase:impl', color: '1d76db', description: 'Implementation phase - coding and testing' },
-        { name: 'phase:tests', color: 'fef2c0', description: 'Testing phase - validation and QA' },
-        { name: 'status:wip', color: 'fbca04', description: 'Work in progress' },
-        { name: 'status:needs-review', color: 'd93f0b', description: 'Ready for review' },
-        { name: 'status:complete', color: '0e8a16', description: 'Completed and approved' },
-        { name: 'status:changes-requested', color: 'd93f0b', description: 'Changes requested in review' },
-        { name: 'ai-agent:cursor', color: '5319e7', description: 'Assigned to Cursor AI agent' },
-        { name: 'ai-agent:claude', color: 'c2e0c6', description: 'Assigned to Claude AI agent' },
-        { name: 'ai-agent:windsurf', color: 'bfdadc', description: 'Assigned to Windsurf AI agent' }
-    ];
-
-    const labelsContent = JSON.stringify(labels, null, 2);
-    writeFile('.github/labels.json', labelsContent);
-    
-    logSuccess('GitHub labels configuration file created');
-    logInfo('You can import these labels using:');
-    logInfo('1. GitHub web interface: Settings > Labels > Import labels');
-    logInfo('2. Or manually create each label with the provided colors and descriptions');
-}
-
-function createGitHubWorkflows() {
-    // Get the directory where this script is located (FRAIM package directory)
-    const fraimDir = __dirname;
-    
-    // Copy actual workflow files from FRAIM/github folder
-    const workflowsSrc = path.join(fraimDir, 'github');
-    if (fs.existsSync(workflowsSrc)) {
-        copyDirectory(workflowsSrc, '.github/workflows');
-        logSuccess('GitHub workflows copied from FRAIM/github folder');
+    // Copy rule files from the templates directory if it exists
+    if (fs.existsSync('templates/rules')) {
+        copyDirectory('templates/rules', 'rules');
+        logSuccess('Copied rule templates');
     } else {
-        logWarning(`github folder not found at ${workflowsSrc}, skipping workflow creation`);
+        logInfo('No rule templates found, skipping');
     }
-}
 
-function createAgentFolders() {
-    // Get the directory where this script is located (FRAIM package directory)
-    const fraimDir = __dirname;
-    
-    // Create .cursor folder at top level with all contents
-    const cursorSrc = path.join(fraimDir, 'agents', 'cursor');
-    if (fs.existsSync(cursorSrc)) {
-        copyDirectory(cursorSrc, '.cursor');
-        logSuccess('Created .cursor folder with all contents');
+    // Copy workflow templates if they exist
+    if (fs.existsSync('templates/workflows')) {
+        copyDirectory('templates/workflows', 'workflows');
+        logSuccess('Copied workflow templates');
     } else {
-        logWarning(`agents/cursor directory not found at ${cursorSrc}, skipping .cursor creation`);
+        logInfo('No workflow templates found, skipping');
     }
 
-    // Create .windsurf folder at top level with all contents
-    const windsurfSrc = path.join(fraimDir, 'agents', 'windsurf');
-    if (fs.existsSync(windsurfSrc)) {
-        copyDirectory(windsurfSrc, '.windsurf');
-        logSuccess('Created .windsurf folder with all contents');
-    } else {
-        logWarning(`agents/windsurf directory not found at ${windsurfSrc}, skipping .windsurf creation`);
-    }
+    // Create basic CODEOWNERS file
+    const codeownersContent = `# This file defines the code owners for the repository
+# Code owners are automatically requested for review when someone opens a PR that modifies code they own
+# See: https://docs.github.com/en/repositories/managing-your-codebase-in-github/about-code-owners
 
-    // Create CLAUDE.md at top level
-    const claudeSrc = path.join(fraimDir, 'agents', 'claude', 'CLAUDE.md');
-    if (fs.existsSync(claudeSrc)) {
-        const claudeContent = fs.readFileSync(claudeSrc, 'utf8');
-        writeFile('CLAUDE.md', claudeContent);
-        logSuccess('Created CLAUDE.md at top level');
-    } else {
-        logWarning(`agents/claude/CLAUDE.md not found at ${claudeSrc}, skipping CLAUDE.md creation`);
-    }
-}
+# Default owners for everything in the repo
+*       @${process.env.USER || 'repo-owner'}
 
-async function runWizard() {
-    logHeader('🔮 FRAIM Interactive Setup Wizard');
-    log('Welcome to the FRAIM setup wizard! I\'ll guide you through each step.\n');
+# Specific ownership for different parts of the codebase
+/rules/          @${process.env.USER || 'repo-owner'}
+/workflows/      @${process.env.USER || 'repo-owner'}
+/templates/      @${process.env.USER || 'repo-owner'}
+/scripts/        @${process.env.USER || 'repo-owner'}
+/.github/        @${process.env.USER || 'repo-owner'}
 
-    try {
-        // Check prerequisites
-        logStep('Step 1: Checking Prerequisites');
-        
-        // Check if we're in a git repository
-        try {
-            execSync('git rev-parse --git-dir', { stdio: 'pipe' });
-            logSuccess('Running in a git repository');
-        } catch (error) {
-            logError('Not in a git repository');
-            logInfo('Please run this command from within a git repository');
-            return;
-        }
+# Documentation
+/docs/           @${process.env.USER || 'repo-owner'}
+*.md             @${process.env.USER || 'repo-owner'}`;
+    writeFile('CODEOWNERS', codeownersContent);
+    logSuccess('Created CODEOWNERS file');
 
-        // Step 2: Project Structure
-        logStep('Step 2: Project Structure');
-        const setupStructure = await askQuestion('Would you like to create project structure (retrospectives, docs/rfcs with templates)?', 'y');
-        
-        if (setupStructure === 'y' || setupStructure === 'yes') {
-            createProjectStructure();
-        } else {
-            logInfo('Skipping project structure setup');
-        }
+    // Create basic PR template
+    const prTemplateContent = `# Pull Request
 
-        // Step 3: AI Agent Setup
-        logStep('Step 3: AI Agent Configuration');
-        const setupAgents = await askQuestion('Would you like to set up AI agent configurations (.cursor, .windsurf, CLAUDE.md)?', 'y');
-        
-        if (setupAgents === 'y' || setupAgents === 'yes') {
-            createAgentFolders();
-        } else {
-            logInfo('Skipping AI agent setup');
-        }
+## Description
+<!-- Provide a brief description of the changes in this PR -->
 
-        // Step 4: GitHub Workflows
-        logStep('Step 4: GitHub Workflows');
-        const setupWorkflows = await askQuestion('Would you like to set up GitHub workflows for automation?', 'y');
-        
-        if (setupWorkflows === 'y' || setupWorkflows === 'yes') {
-            ensureDirectory('.github/workflows');
-            createGitHubWorkflows();
-        } else {
-            logInfo('Skipping GitHub workflow setup');
-        }
+## Related Issue
+<!-- Link to the issue this PR addresses (use format: Closes #123, Fixes #123) -->
 
-        // Step 5: GitHub Labels
-        logStep('Step 5: GitHub Labels');
-        const setupLabels = await askQuestion('Would you like to create GitHub labels for FRAIM?', 'y');
-        
-        if (setupLabels === 'y' || setupLabels === 'yes') {
-            const ghAvailable = await setupGitHubCLI();
-            if (ghAvailable) {
-                createGitHubLabels();
-            } else {
-                logInfo('GitHub CLI not available - creating labels configuration file instead');
-                createLabelsConfigFile();
-            }
-        } else {
-            logInfo('Skipping GitHub label setup');
-        }
+## Type of Change
+<!-- Mark the appropriate option with an [x] -->
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Documentation update
+- [ ] Code refactoring
+- [ ] Performance improvement
+- [ ] Tests
+- [ ] Build/CI changes
+- [ ] Other (please describe):
 
-        // Step 6: Summary
-        logStep('Step 6: Setup Summary');
-        logHeader('🎉 Setup Complete!');
-        logSuccess('FRAIM has been successfully set up in your repository!');
-        logInfo('Next steps:');
-        logInfo('1. Commit and push these files to GitHub');
-        logInfo('2. Import GitHub labels from .github/labels.json using the web interface');
-        logInfo('3. Create your first issue with phase labels');
-        logInfo('4. Start coordinating your AI agents!');
-        
-        logInfo('\n📚 Learn more about FRAIM:');
-        logInfo('https://github.com/mathursrus/FRAIM');
-        
-        logInfo('\n🧠 Learn the RIGOR methodology:');
-        logInfo('npx fraim-framework rigor');
+## Implementation Details
+<!-- Provide a detailed description of the implementation -->
 
-    } catch (error) {
-        logError(`Wizard failed: ${error.message}`);
-        process.exit(1);
-    }
+## Testing
+<!-- Describe the testing you've done -->
+- [ ] Added unit tests
+- [ ] Added integration tests
+- [ ] Manually tested
+- [ ] Test exempt (explain why)
+
+## Evidence
+<!-- Provide evidence of testing (screenshots, logs, etc.) -->
+
+## Checklist
+<!-- Mark items with [x] once completed -->
+- [ ] Code follows project style guidelines
+- [ ] Documentation has been updated
+- [ ] All tests are passing
+- [ ] PR has been reviewed by at least one team member
+- [ ] Changes have been tested in a development environment
+
+## Additional Notes
+<!-- Any additional information that might be helpful for reviewers -->`;
+    writeFile('.github/pull_request_template.md', prTemplateContent);
+    logSuccess('Created PR template');
+
+    // Create labels.json
+    const labelsContent = `[
+  {
+    "name": "aiagents",
+    "color": "0e8a16",
+    "description": "Issue prepared for AI agent collaboration"
+  },
+  {
+    "name": "status:ready-for-design",
+    "color": "0075ca",
+    "description": "Issue is ready for design phase"
+  },
+  {
+    "name": "status:in-design",
+    "color": "0075ca",
+    "description": "Issue is currently in design phase"
+  },
+  {
+    "name": "status:ready-for-implementation",
+    "color": "7057ff",
+    "description": "Issue is ready for implementation phase"
+  },
+  {
+    "name": "status:in-implementation",
+    "color": "7057ff",
+    "description": "Issue is currently in implementation phase"
+  },
+  {
+    "name": "status:ready-for-testing",
+    "color": "008672",
+    "description": "Issue is ready for testing phase"
+  },
+  {
+    "name": "status:in-testing",
+    "color": "008672",
+    "description": "Issue is currently in testing phase"
+  },
+  {
+    "name": "status:test-exempt",
+    "color": "c5def5",
+    "description": "Implementation is exempt from test requirements"
+  },
+  {
+    "name": "status:blocked",
+    "color": "d73a4a",
+    "description": "Issue is blocked by another issue or external factor"
+  },
+  {
+    "name": "status:needs-review",
+    "color": "fbca04",
+    "description": "Issue or PR needs review"
+  },
+  {
+    "name": "status:approved",
+    "color": "0e8a16",
+    "description": "Issue or PR has been approved"
+  },
+  {
+    "name": "status:needs-revision",
+    "color": "d93f0b",
+    "description": "Issue or PR needs revision based on feedback"
+  },
+  {
+    "name": "priority:high",
+    "color": "d93f0b",
+    "description": "High priority issue"
+  },
+  {
+    "name": "priority:medium",
+    "color": "fbca04",
+    "description": "Medium priority issue"
+  },
+  {
+    "name": "priority:low",
+    "color": "c5def5",
+    "description": "Low priority issue"
+  }
+]`;
+    writeFile('labels.json', labelsContent);
+    logSuccess('Created labels.json');
 }
 
 async function runSetup() {
-    logHeader('🚀 FRAIM Quick Setup');
-    log('Setting up FRAIM in current repository...\n');
+    logHeader('FRAIM Setup');
+    logInfo('Setting up FRAIM in the current directory...');
 
-    try {
-        // Check prerequisites
-        try {
-            execSync('git rev-parse --git-dir', { stdio: 'pipe' });
-        } catch (error) {
-            logError('Not in a git repository');
-            logInfo('Please run this command from within a git repository');
-            process.exit(1);
-        }
+    // Create project structure
+    logStep('Creating project structure');
+    createProjectStructure();
 
-        // Create everything at once
-        createProjectStructure();
-        ensureDirectory('.github/workflows');
-        createAgentFolders();
-        createGitHubWorkflows();
-        
-        // Check GitHub CLI availability for labels
-        try {
-            execSync('gh --version', { stdio: 'pipe' });
-            try {
-                execSync('gh auth status', { stdio: 'pipe' });
-                logInfo('GitHub CLI available and authenticated - creating labels automatically');
-                createGitHubLabels();
-            } catch (error) {
-                logWarning('GitHub CLI not authenticated - creating labels configuration file instead');
-                createLabelsConfigFile();
-            }
-        } catch (error) {
-            logInfo('GitHub CLI not available - creating labels configuration file instead');
-            createLabelsConfigFile();
-        }
-
-        logHeader('🎉 Setup Complete!');
-        logSuccess('FRAIM has been successfully set up in your repository!');
-        logInfo('Next steps:');
-        logInfo('1. Commit and push these files to GitHub');
-        logInfo('2. Import GitHub labels from .github/labels.json using the web interface');
-        logInfo('3. Create your first issue with phase labels');
-        logInfo('4. Start coordinating your AI agents!');
-        
-        logInfo('\n📚 Learn more about FRAIM:');
-        logInfo('https://github.com/mathursrus/FRAIM');
-        
-        logInfo('\n🧠 Learn the RIGOR methodology:');
-        logInfo('npx fraim-framework rigor');
-
-    } catch (error) {
-        logError(`Setup failed: ${error.message}`);
-        process.exit(1);
-    }
+    logSuccess('\nFRAIM setup completed successfully!');
+    logInfo('\nNext steps:');
+    log('1. Review the created files and directories');
+    log('2. Customize the templates to fit your project');
+    log('3. Set up GitHub Actions workflows');
+    log('4. Start using FRAIM to manage your AI agents!');
 }
 
-// Run setup if this script is executed directly
+async function runWizard() {
+    logHeader('FRAIM Interactive Setup Wizard');
+    logInfo('This wizard will guide you through setting up FRAIM in your project.');
+
+    const setupProject = await askQuestion('Do you want to set up FRAIM in the current directory?');
+    if (setupProject !== 'y' && setupProject !== 'yes') {
+        logInfo('Setup cancelled.');
+        return;
+    }
+
+    // Create project structure
+    logStep('Creating project structure');
+    createProjectStructure();
+
+    // Ask about GitHub Actions
+    const setupGitHubActions = await askQuestion('Do you want to set up GitHub Actions workflows?');
+    if (setupGitHubActions === 'y' || setupGitHubActions === 'yes') {
+        logStep('Setting up GitHub Actions workflows');
+        // TODO: Implement GitHub Actions setup
+        logInfo('GitHub Actions setup is not yet implemented.');
+    }
+
+    logSuccess('\nFRAIM setup completed successfully!');
+    logInfo('\nNext steps:');
+    log('1. Review the created files and directories');
+    log('2. Customize the templates to fit your project');
+    log('3. Set up GitHub Actions workflows');
+    log('4. Start using FRAIM to manage your AI agents!');
+}
+
+// If this file is run directly, execute the setup
 if (require.main === module) {
     runSetup();
 }
 
-module.exports = { runSetup, runWizard, createProjectStructure };
+// Export functions for use in other files
+module.exports = {
+    runSetup,
+    runWizard
+};
