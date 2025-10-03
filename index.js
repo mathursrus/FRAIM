@@ -35,6 +35,33 @@ module.exports.FRAIM_INFO = {
         'Retrospectives: Continuous learning from mistakes and positive experiences'
     ],
     supportedAgents: ['cursor', 'claude', 'windsurf'],
-    repository: 'https://github.com/mathursrus/Ashley-Calendar-AI/tree/master/FRAIM',
-    note: 'All rules and workflows have been tested and proven in real project environments'
+    repository: 'https://github.com/mathursrus/FRAIM',
+    note: 'All rules and workflows have been tested and proven in real project environments',
+    
+    // New structure information
+    structure: {
+        rules: '/rules/',
+        workflows: '/workflows/',
+        templates: '/templates/',
+        scripts: '/scripts/',
+        github: '/.github/'
+    },
+    
+    // Centralized rules
+    centralizedRules: [
+        'integrity-and-test-ethics.md',
+        'simplicity.md',
+        'architecture.md',
+        'continuous-learning.md',
+        'successful-debugging-patterns.md'
+    ],
+    
+    // Workflow templates
+    workflowTemplates: [
+        'design.md',
+        'implement.md',
+        'test.md',
+        'resolve.md',
+        'retrospect.md'
+    ]
 };
