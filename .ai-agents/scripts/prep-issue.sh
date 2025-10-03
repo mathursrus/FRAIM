@@ -1,114 +1,162 @@
 #!/bin/bash
 
-# FRAIM - Issue Preparation Script
-# This script automates the deterministic workflow for issue preparation
+# Project Issue Preparation Script
+# This script automates the deterministic workflow from prep.md
 
 set -e  # Exit on any error
 
-# Function to display usage
-usage() {
-    echo "Usage: $0 <issue_number> [editor]"
-    echo "Example: $0 123"
-    echo "Example: $0 123 windsurf"
-    echo "Example: $0 123 claude"
-    echo "Example: $0 123 cursor"
-    echo ""
-    echo "Editor options: windsurf, claude, claudecode, cursor (default)"
-    echo "If no editor specified, will try to detect from GitHub issue labels"
-    exit 1
-}
-
-# Function to get editor from GitHub issue labels
-get_editor_from_issue() {
+# Function to detect editor from issue labels
+detect_editor_from_issue() {
     local issue_num=$1
     
-    # Try to get the issue labels using GitHub CLI
+    # Try GitHub CLI first
     if command -v gh &> /dev/null; then
-        local labels=$(gh issue view $issue_num --json labels --jq '.labels[].name' 2>/dev/null)
-    else
-        echo "Warning: No GitHub CLI found. Cannot auto-detect editor from issue labels." >&2
-        return 1
-    fi
-    
-    # Look for ai-agent labels
-    for label in $labels; do
-        if [[ $label == ai-agent:* ]]; then
-            local editor=${label#ai-agent:}
-            echo "Found ai-agent label: $label -> editor: $editor" >&2
-            echo "$editor"
+        local labels=$(gh issue view $issue_num --json labels --jq '.labels[].name' 2>/dev/null | grep "^ai-agent:" | head -1)
+        if [ -n "$labels" ]; then
+            echo "$labels" | sed 's/ai-agent://'
             return 0
         fi
-    done
+    else
+        # Fallback to curl (requires GitHub token in GITHUB_TOKEN env var)
+        if [ -n "$GITHUB_TOKEN" ]; then
+            local labels=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+                "https://api.github.com/repos/{OWNER}/{REPO}/issues/$issue_num" \
+                | grep -o '"name":"ai-agent:[^"]*"' | sed 's/"name":"ai-agent://' | sed 's/"//' 2>/dev/null)
+        else
+            echo "Warning: No GitHub CLI or GITHUB_TOKEN found. Cannot auto-detect editor from issue labels." >&2
+        fi
+    fi
     
-    echo "No ai-agent label found. Using default editor." >&2
     return 1
 }
 
+# Function to open editor with project
+open_editor() {
+    local editor=$1
+    local project_path=$2
+    
+    case "$editor" in
+        "windsurf")
+            if command -v windsurf &> /dev/null; then
+                echo "Opening Windsurf..."
+                windsurf "$project_path" &
+            else
+                echo "Windsurf not found in PATH"
+                return 1
+            fi
+            ;;
+        "cursor")
+            if command -v cursor &> /dev/null; then
+                echo "Opening Cursor..."
+                cursor "$project_path" &
+            else
+                echo "Cursor not found in PATH"
+                return 1
+            fi
+            ;;
+        *)
+            echo "Unknown editor: $editor"
+            return 1
+            ;;
+    esac
+}
+
 # Check if issue number is provided
-if [ $# -lt 1 ]; then
-    usage
-fi
-
-ISSUE_NUMBER=$1
-EDITOR=${2:-""}
-
-# Auto-detect editor if not provided
-if [ -z "$EDITOR" ]; then
-    DETECTED_EDITOR=$(get_editor_from_issue $ISSUE_NUMBER)
-    if [ $? -eq 0 ]; then
-        EDITOR=$DETECTED_EDITOR
-    else
-        EDITOR="cursor"  # Default fallback
-    fi
-fi
-
-echo "Preparing issue #$ISSUE_NUMBER with editor: $EDITOR"
-
-# Get repository name from git remote
-REPO_NAME=$(basename -s .git $(git config --get remote.origin.url))
-if [ -z "$REPO_NAME" ]; then
-    echo "Error: Could not determine repository name from git remote"
+if [ $# -eq 0 ]; then
+    echo "Usage: $0 <issue_number> [editor]"
+    echo "Example: $0 123 windsurf"
     exit 1
 fi
 
-# Create workspace directory
-WORKSPACE_DIR="${REPO_NAME} - Issue ${ISSUE_NUMBER}"
+ISSUE_NUMBER=$1
+EDITOR=${2:-""}  # Will be set later if not provided
 
-echo "Creating workspace directory: $WORKSPACE_DIR"
+echo "=== Project Issue Preparation ==="
+echo "Preparing for Issue #$ISSUE_NUMBER"
+echo
 
-# Clone repository if directory doesn't exist
-if [ ! -d "$WORKSPACE_DIR" ]; then
-    git clone $(git config --get remote.origin.url) "$WORKSPACE_DIR"
-    cd "$WORKSPACE_DIR"
+# Auto-detect editor from issue labels if not provided
+if [ -z "$EDITOR" ]; then
+    echo "Auto-detecting editor from issue labels..."
+    DETECTED_EDITOR=$(detect_editor_from_issue $ISSUE_NUMBER)
+    if [ -n "$DETECTED_EDITOR" ]; then
+        EDITOR="$DETECTED_EDITOR"
+        echo "Detected editor: $EDITOR"
+    else
+        echo "Could not auto-detect editor. Defaulting to windsurf."
+        EDITOR="windsurf"
+    fi
 else
-    cd "$WORKSPACE_DIR"
-    git fetch origin
+    echo "Using specified editor: $EDITOR"
 fi
 
-# Get issue title and create branch name
-ISSUE_TITLE=$(gh issue view $ISSUE_NUMBER --json title --jq '.title' 2>/dev/null || echo "issue-$ISSUE_NUMBER")
-BRANCH_NAME="feature/${ISSUE_NUMBER}-$(echo "$ISSUE_TITLE" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g')"
+# Get current directory and parent
+CURRENT_DIR=$(pwd)
+PARENT_DIR=$(dirname "$CURRENT_DIR")
 
-echo "Branch name: $BRANCH_NAME"
+echo "Current directory: $CURRENT_DIR"
+echo "Parent directory: $PARENT_DIR"
 
-# Create and switch to feature branch
-if git show-ref --verify --quiet refs/heads/$BRANCH_NAME; then
-    echo "Branch $BRANCH_NAME already exists, checking out..."
-    git checkout $BRANCH_NAME
+# Define clone directory name
+CLONE_DIR="{PROJECT_NAME} - Issue $ISSUE_NUMBER"
+CLONE_PATH="$PARENT_DIR/$CLONE_DIR"
+
+# Check if directory already exists
+if [ -d "$CLONE_PATH" ]; then
+    echo "Directory already exists: $CLONE_PATH"
+    echo "Entering existing directory..."
+    cd "$CLONE_PATH"
 else
-    echo "Creating new branch: $BRANCH_NAME"
+    echo "Creating new clone directory..."
+    
+    # Change to parent directory
+    cd "$PARENT_DIR"
+
+# Clone the repository
+echo "Cloning to: $CLONE_PATH"
+git clone {REPOSITORY_URL} "$CLONE_DIR"
+
+# Change into the cloned repository
+cd "$CLONE_DIR"
+fi
+
+# Create and checkout feature branch
+BRANCH_NAME="feature/$ISSUE_NUMBER"
+echo "Creating/checking out branch: $BRANCH_NAME"
+
+if git show-ref --verify --quiet refs/heads/$BRANCH_NAME; then
+    echo "Branch exists locally, checking out..."
+    git checkout $BRANCH_NAME
+elif git show-ref --verify --quiet refs/remotes/origin/$BRANCH_NAME; then
+    echo "Branch exists on remote, checking out..."
+    git checkout -b $BRANCH_NAME origin/$BRANCH_NAME
+else
+    echo "Creating new branch..."
     git checkout -b $BRANCH_NAME
 fi
 
-# Push branch to origin
-git push -u origin $BRANCH_NAME
+# Push branch to origin if it doesn't exist remotely
+if ! git show-ref --verify --quiet refs/remotes/origin/$BRANCH_NAME; then
+    echo "Pushing new branch to origin..."
+    git push -u origin $BRANCH_NAME
+fi
 
-echo "✅ Issue #$ISSUE_NUMBER prepared successfully!"
-echo "📁 Workspace: $WORKSPACE_DIR"
+echo
+echo "✅ Setup complete!"
+echo "📁 Working directory: $CLONE_PATH"
 echo "🌿 Branch: $BRANCH_NAME"
-echo "🎯 Editor: $EDITOR"
-echo ""
-echo "Next steps:"
-echo "1. Open your $EDITOR editor in the workspace directory"
-echo "2. Work on the issue according to the phase workflow"
-echo "3. Commit and push your changes"
+echo "🔧 Editor: $EDITOR"
+echo
+
+# Open the editor
+echo "Opening $EDITOR..."
+if open_editor "$EDITOR" "$CLONE_PATH"; then
+    echo "✅ $EDITOR opened successfully"
+else
+    echo "❌ Failed to open $EDITOR"
+    echo "Please manually open your editor with: $CLONE_PATH"
+fi
+
+echo
+echo "🚀 Ready to work on Issue #$ISSUE_NUMBER!"
+echo "Remember to work only in this directory: $CLONE_PATH"
