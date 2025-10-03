@@ -50,7 +50,8 @@ FRAIM/
 │   ├── integrity-and-test-ethics.md  # Core ethical principles
 │   ├── simplicity.md            # Guidelines for keeping solutions simple
 │   ├── architecture.md          # Technical architecture principles
-│   └── ...                      # Other rule files
+│   ├── continuous-learning.md   # Learning from retrospectives and RFCs
+│   └── successful-debugging-patterns.md  # Debug issues systematically
 │
 ├── templates/                   # Standardized templates
 │   ├── evidence/                # Test evidence templates
@@ -62,13 +63,14 @@ FRAIM/
 │   ├── setup-fraim.yml          # Automated FRAIM setup
 │   ├── design.md                # Design phase workflow
 │   ├── implement.md             # Implementation phase workflow
-│   └── ...                      # Other workflow templates
+│   ├── test.md                  # Testing phase workflow
+│   ├── resolve.md               # Issue resolution workflow
+│   └── retrospect.md            # Retrospective workflow
 │
 ├── .github/                     # GitHub configuration
 │   ├── workflows/               # GitHub Actions workflows
 │   │   ├── ci.yml               # Continuous integration workflow
-│   │   ├── phase-change.yml     # Development phase transitions
-│   │   └── ...                  # Other GitHub workflows
+│   │   └── phase-change.yml     # Development phase transitions
 │   └── pull_request_template.md # PR template
 │
 ├── agents/                      # AI agent configurations
@@ -77,17 +79,18 @@ FRAIM/
 │   └── windsurf/                # Windsurf agent configuration
 │
 ├── scripts/                     # Automation scripts
+│   ├── __init__.py              # Python package initialization
+│   ├── cli.py                   # Python CLI implementation
 │   ├── ensure-tests-present.sh  # Test validation script
 │   ├── exec-with-timeout.sh     # Command execution with timeout
-│   ├── prep-issue.sh            # Issue preparation for AI agents
-│   └── ...                      # Other automation scripts
+│   └── prep-issue.sh            # Issue preparation for AI agents
 │
 ├── docs/                        # Documentation and guides
 │   ├── rfcs/                    # RFC documents
 │   └── guides/                  # Getting started guides
 │
-└── examples/                    # Example implementations
-    └── simple-webapp/           # Sample project with FRAIM config
+└── bin/                         # Command-line interface
+    └── fraim.js                 # FRAIM CLI with full functionality
 ```
 
 ## 🤖 Supported AI Agents
