@@ -1,226 +1,114 @@
-# Successful Debugging Patterns for Complex Integrations
+# Successful Debugging Patterns
 
 ## INTENT
-To provide agents with proven patterns for debugging complex integrations, especially OAuth flows, API integrations, and multi-layer systems that require both UI automation and backend validation.
+Establish systematic debugging approaches that convert challenges into learning opportunities and prevent recurring issues through comprehensive testing and documentation.
 
 ## PRINCIPLES
-- **Multi-Layer Validation**: Always validate at UI, API, and Database layers
-- **Iterative Enhancement**: Continuously refine approaches based on real-time feedback
-- **Appropriate Timeout Management**: Use different timeouts for different operation types
-- **Real-Time Monitoring**: Monitor logs and database state during complex operations
-- **Visual Debugging**: Use screenshots and visual feedback to understand UI state
+- **Systematic Approach**: Follow structured debugging methodology
+- **Evidence-Based**: Document findings with concrete evidence
+- **Learning Focus**: Convert every debug session into reusable knowledge
+- **Test-Driven**: Create tests that prevent regression
+- **Pattern Recognition**: Identify and document common failure modes
 
-## CORE DEBUGGING PATTERN
+## SYSTEMATIC DEBUGGING METHODOLOGY
 
-### The "Repro -> Analyze → Implement → Test → Validate → Document → VERIFY COMPLETENESS" Pattern
+### 1. Issue Reproduction
+**Goal**: Create reliable, repeatable failure conditions
 
-```
-1. REPRO: Reproduce the issue in a controlled environment. This can be manual using Playwright for UI issues, Curl for API issues, etc; or it can be through existing test cases. Run only the test case that fails. Mark it with tag `failing`, then run `npm run test-failing <test-suite>`
-2. ANALYZE: Use tools to examine actual codebase (grep_search, Read)
-3. IMPLEMENT: Make targeted changes based on real code analysis
-4. TEST: Run the single test and ensure it passes. Then run comprehensive tests for evidence
-5. VALIDATE: Verify functionality works end-to-end
-6. DOCUMENT: Create test cases that replicate the flow and validate end state
-7. VERIFY COMPLETENESS: Run comprehensive verification checklist (NEW CRITICAL STEP)
-8. ITERATE: Refine based on real feedback and evidence
-```
+**Steps**:
+1. Document exact steps to reproduce
+2. Identify minimum conditions for failure
+3. Create automated reproduction script
+4. Verify reproduction works consistently
+5. Document environment and dependencies
 
-### **NEW: Mandatory Completeness Verification Pattern**
+### 2. Evidence Collection
+**Goal**: Gather comprehensive data about the failure
 
-Before declaring ANY work complete, **MUST** follow this systematic verification:
+**Steps**:
+1. Collect error messages and stack traces
+2. Review relevant logs with timestamps
+3. Document system state at failure time
+4. Capture network requests/responses
+5. Record configuration and environment details
 
-```bash
-# Step 1: Compilation Verification
-timeout 30s npx tsc --noEmit --skipLibCheck
-# MUST show 0 errors - fix any errors before proceeding
+### 3. Root Cause Analysis
+**Goal**: Identify the underlying cause, not just symptoms
 
-# Step 2: Build Verification (if build script exists)
-timeout 60s npm run build
-# MUST complete successfully
+**Steps**:
+1. Trace execution flow to failure point
+2. Examine code logic and data flow
+3. Identify assumptions that may be incorrect
+4. Check for race conditions or timing issues
+5. Validate external dependencies
 
-# Step 3: Comprehensive Search Verification
-# Search for ALL possible references using multiple patterns:
-grep_search --SearchPath . --Query "OldClassName" --MatchPerLine true
-grep_search --SearchPath . --Query "import.*OldClassName" --IsRegex true --MatchPerLine true  
-grep_search --SearchPath . --Query "old-filename" --MatchPerLine true
-grep_search --SearchPath . --Query "oldMethodName" --MatchPerLine true
+### 4. Solution Development
+**Goal**: Create targeted fix that addresses root cause
 
-# Step 4: Test Execution with Timeout
-timeout 30s npx tsx --test --test-reporter tap test-relevant-file.ts
+**Steps**:
+1. Design minimal fix for root cause
+2. Consider impact on other system components
+3. Plan rollback strategy if needed
+4. Implement fix with proper error handling
+5. Add monitoring/logging for future detection
 
-# Step 5: End-to-End Functionality Check
-# Verify main application workflows still work
-```
+### 5. Validation and Testing
+**Goal**: Ensure fix works and doesn't break anything else
 
-### Enhanced Multi-Layer Debugging Pattern
+**Steps**:
+1. Verify original issue is resolved
+2. Run comprehensive test suite
+3. Test edge cases and error conditions
+4. Validate performance impact
+5. Confirm no new issues introduced
 
-```
-1. Code Analysis (grep_search, find_by_name to understand current state)
-2. UI Action (Playwright automation with screenshots)
-3. Database Check (verify persistence and state changes)
-4. Log Analysis (check server logs for errors/success)
-5. API Testing (verify endpoints work correctly)
-6. Integration Testing (test full workflows)
-7. Evidence Collection (screenshots, logs, test results)
-8. Refine Approach (improve based on findings)
-9. Repeat (iterate until success with evidence)
-```
+## SPECIFIC DEBUGGING TECHNIQUES
 
-## SPECIFIC SCRIPTS AND COMMANDS
-
-### 1. Long-Running Server Management
-
-**Start Server with Proper Timeout:**
-```bash
-# Use 1-hour timeout for server processes
-npx tsx scripts/development/exec-with-timeout.ts --timeout 3600 -- npm run dev &
-```
-
-**Monitor Server Logs in Real-Time:**
-```bash
-# Real-time monitoring
-npx tsx scripts/development/exec-with-timeout.ts --timeout 30 -- tail -f server.log
-
-# Historical log analysis
-npx tsx scripts/development/exec-with-timeout.ts --timeout 30 -- tail -100 server.log
-
-# Look for errors in logs
-npx tsx scripts/development/exec-with-timeout.ts --timeout 30 -- grep error server.log
-```
-
-**Check Server Status:**
-```bash
-# Verify server is running on correct port
-npx tsx scripts/development/exec-with-timeout.ts --timeout 30 -- netstat -ano | findstr :<port>
-
-# Test API endpoints
-npx tsx scripts/development/exec-with-timeout.ts --timeout 30 -- curl -s "http://localhost:<port>/<endpoint>"
-```
-
-### 2. Code Analysis and Understanding
+### Code Analysis and Understanding
 
 **CRITICAL: Always Analyze Before Implementing**
 Before making any changes, use tools to understand the current codebase:
 
 ```bash
 # Find all files that import a specific module
-grep_search --SearchPath src --Query "import.*GmailService" --IsRegex true --MatchPerLine true
+grep_search --SearchPath src --Query \"import.*ApiService\" --IsRegex true --MatchPerLine true
 
 # Find files by pattern
-find_by_name --SearchDirectory src --Pattern "*email*" --Type file
+find_by_name --SearchDirectory src --Pattern \"*service*\" --Type file
 
 # Read specific files to understand implementation
-Read --file_path src/email/email-service.ts
+Read --file_path src/services/api-service.ts
 ```
 
 **Pattern Analysis Requirements:**
-1. **Examine existing patterns** in the codebase (e.g., CalendarService pattern)
+1. **Examine existing patterns** in the codebase (e.g., ServiceBase pattern)
 2. **Use grep_search** to find all dependencies and usage
 3. **Read actual implementations** to understand current architecture
 4. **Document findings** with real code examples and line numbers
 
-### 3. Playwright UI Automation with Visual Debugging
+### Database Validation Scripts
 
-**IMPORTANT: Tool Troubleshooting Pattern**
-When MCP Playwright tools fail with errors like `TypeError: (0 , import_server2.firstRootPath) is not a function`:
-
-1. **Check for existing working Playwright tests** in the project
-2. **Use direct Playwright library** instead of MCP tools
-3. **Look for test files** like `test-dashboard-ui.ts`, `test-hitl-ui.ts` as templates
-4. **Create custom test scripts** using the direct library approach
-
-**Basic Playwright Script Template:**
+**Database State Validation:**
 ```typescript
-import { chromium } from 'playwright';
-
-async function debugUIFlow() {
-  const browser = await chromium.launch({ 
-    headless: false,
-    slowMo: 2000  // Human-like delays
-  });
-  
-  try {
-    const page = await browser.newPage();
-    
-    // Step 1: Navigate
-    await page.goto(targetUrl);
-    await page.waitForLoadState('networkidle');
-    
-    // Step 2: Take screenshot for debugging
-    await page.screenshot({ path: 'debug-step-1.png' });
-    console.log('📸 Screenshot saved: debug-step-1.png');
-    
-    // Step 3: Perform action
-    await page.fill('input[type="email"]', 'test@example.com');
-    await page.click('button:has-text("Next")');
-    
-    // Step 4: Take another screenshot
-    await page.screenshot({ path: 'debug-step-2.png' });
-    console.log('📸 Screenshot saved: debug-step-2.png');
-    
-    // Step 5-N: Iterate on above until scenario is fully validated
-    
-    
-  } catch (error) {
-    console.error('❌ UI flow failed:', error);
-    await page.screenshot({ path: 'error-state.png' });
-  } finally {
-    await browser.close();
-  }
-}
-```
-
-**Advanced Playwright with Multiple Button Selectors:**
-```typescript
-// Look for multiple possible button selectors
-const buttonSelectors = [
-  'button:has-text("Continue")',
-  'button:has-text("Allow")',
-  'button:has-text("Accept")',
-  'button:has-text("Authorize")',
-  'button[type="submit"]',
-  'button[jsname="LgbsSe"]:has-text("Continue")'
-];
-
-let buttonClicked = false;
-for (const selector of buttonSelectors) {
-  try {
-    const button = await page.waitForSelector(selector, { timeout: 3000 });
-    if (button && await button.isVisible()) {
-      console.log(`🎯 Clicking button: ${selector}`);
-      await button.click();
-      buttonClicked = true;
-      break;
-    }
-  } catch (e) {
-    // Continue to next selector
-  }
-}
-```
-
-### 3. Database Validation Scripts
-
-**MongoDB Token Validation:**
-```typescript
-const { DatabaseFactory } = require('./src/databases/database-factory');
+const { DatabaseService } = require('./src/services/database-service');
 
 async function checkDatabaseState() {
   console.log('🔍 Checking database state...');
-  const dbService = await DatabaseFactory.createCalendarDatabaseService();
+  const dbService = new DatabaseService();
   await dbService.initialize();
 
   try {
     // Check for tokens
-    const tokens = await dbService.loadCalendarTokens('primary');
+    const tokens = await dbService.getTokens('primary');
     console.log('📋 Tokens found:', !!tokens);
     
-    // Check for calendars
-    const calendars = await dbService.getAllCalendars();
-    console.log('📅 Calendars found:', calendars.length);
+    // Check for data
+    const records = await dbService.getAllRecords();
+    console.log('📊 Records found:', records.length);
     
     // Check for specific data
-    const credentials = await dbService.loadCredential('APP_CLIENT_ID');
-    console.log('🔑 Credentials found:', !!credentials);
+    const config = await dbService.getConfig('APP_CLIENT_ID');
+    console.log('🔑 Config found:', !!config);
     
   } catch (error) {
     console.error('❌ Database check failed:', error);
@@ -233,218 +121,193 @@ async function checkDatabaseState() {
 **API Endpoint Testing:**
 ```typescript
 async function testAPIEndpoints() {
-  const baseUrl = 'http://localhost:8333';
+  const baseUrl = 'http://localhost:3000';
   
-  // Test calendar API
+  // Test main API
   try {
-    const response = await fetch(`${baseUrl}/calendar/events?timerange_start=2024-01-01T00:00:00.000Z&timerange_end=2024-01-02T00:00:00.000Z`);
+    const response = await fetch(`${baseUrl}/api/data?start=2024-01-01&end=2024-01-02`);
     const data = await response.json();
-    console.log('📅 Calendar API:', response.status, data);
+    console.log('📊 Data API:', response.status, data);
   } catch (error) {
-    console.error('❌ Calendar API failed:', error);
+    console.error('❌ Data API failed:', error);
   }
   
-  // Test conversation API
+  // Test status API
   try {
-    const response = await fetch(`${baseUrl}/conversation/threads`);
+    const response = await fetch(`${baseUrl}/api/status`);
     const data = await response.json();
-    console.log('💬 Conversation API:', response.status, data);
+    console.log('💬 Status API:', response.status, data);
   } catch (error) {
-    console.error('❌ Conversation API failed:', error);
+    console.error('❌ Status API failed:', error);
   }
 }
 ```
 
-### 4. OAuth Flow Debugging Scripts
+## COMMON DEBUGGING SCENARIOS
 
-**Complete OAuth Flow with Debugging:**
+### Authentication Issues
+**Symptoms**: 401 errors, token validation failures
+**Common Causes**:
+- Expired tokens not being refreshed
+- Missing authentication headers
+- Incorrect token format or encoding
+- Clock skew between systems
+
+**Debugging Steps**:
+1. Verify token expiration times
+2. Check token refresh logic
+3. Validate authentication headers
+4. Test with known-good tokens
+
+### API Integration Issues
+**Symptoms**: Network errors, unexpected responses
+**Common Causes**:
+- Rate limiting
+- API version mismatches
+- Incorrect request formatting
+- Network connectivity issues
+
+**Debugging Steps**:
+1. Check API documentation for changes
+2. Verify request format and headers
+3. Test with API debugging tools
+4. Monitor rate limits and quotas
+
+### Database Connection Issues
+**Symptoms**: Connection timeouts, query failures
+**Common Causes**:
+- Connection pool exhaustion
+- Database server issues
+- Network connectivity problems
+- Query performance issues
+
+**Debugging Steps**:
+1. Check connection pool status
+2. Verify database server health
+3. Analyze slow query logs
+4. Test connection from different environments
+
+## LEARNING AND DOCUMENTATION
+
+### Issue Documentation Template
+```markdown
+# Debug Session: [Issue Title]
+
+## Problem Description
+[Clear description of the issue]
+
+## Reproduction Steps
+1. [Step 1]
+2. [Step 2]
+3. [Expected vs Actual behavior]
+
+## Investigation Process
+- **Hypothesis 1**: [What you thought might be wrong]
+  - **Test**: [How you tested it]
+  - **Result**: [What you found]
+- **Hypothesis 2**: [Next theory]
+  - **Test**: [How you tested it]
+  - **Result**: [What you found]
+
+## Root Cause
+[The actual underlying cause]
+
+## Solution
+[What you changed to fix it]
+
+## Prevention
+- **Tests Added**: [New tests to prevent regression]
+- **Monitoring Added**: [New alerts or logging]
+- **Documentation Updated**: [What docs were improved]
+
+## Lessons Learned
+[Key insights for future debugging]
+```
+
+### Creating Regression Tests
+**Always create tests that would have caught the bug:**
+
 ```typescript
-async function debugOAuthFlow() {
-  const browser = await chromium.launch({ headless: false, slowMo: 3000 });
+describe('Bug Fix: [Issue Description]', () => {
+  it('should handle [specific failure condition]', async () => {
+    // Arrange: Set up the exact conditions that caused the bug
+    const testData = createTestConditions();
+    
+    // Act: Perform the action that previously failed
+    const result = await performAction(testData);
+    
+    // Assert: Verify the fix works
+    expect(result).toBeDefined();
+    expect(result.status).toBe('success');
+  });
   
-  try {
-    const page = await browser.newPage();
-    const oauthUrl = 'https://accounts.google.com/o/oauth2/v2/auth?client_id=...';
-    
-    // Step 1: Navigate and take screenshot
-    await page.goto(oauthUrl);
-    await page.waitForLoadState('networkidle');
-    await page.screenshot({ path: 'oauth-step-1.png' });
-    
-    // Step 2: Email
-    await page.fill('input[type="email"]', 'test@example.com');
-    await page.click('button:has-text("Next")');
-    await page.screenshot({ path: 'oauth-step-2.png' });
-    
-    // Step 3: Password
-    await page.waitForSelector('input[type="password"]');
-    await page.fill('input[type="password"]', 'password');
-    await page.click('button:has-text("Next")');
-    await page.screenshot({ path: 'oauth-step-3.png' });
-    
-    // Step 4: Consent page
-    await page.waitForLoadState('networkidle');
-    await page.screenshot({ path: 'consent-page.png' });
-    
-    // Step 5: Click continue with multiple selectors
-    const continueSelectors = [
-      'button:has-text("Continue")',
-      'button:has-text("Allow")',
-      'button[type="submit"]'
-    ];
-    
-    for (const selector of continueSelectors) {
-      try {
-        const button = await page.waitForSelector(selector, { timeout: 3000 });
-        if (button && await button.isVisible()) {
-          await button.click();
-          break;
-        }
-      } catch (e) {}
-    }
-    
-    // Step 6: Wait for callback
-    await page.waitForURL('**/oauth/callback**', { timeout: 20000 });
-    console.log('✅ OAuth flow completed!');
-    
-  } catch (error) {
-    console.error('❌ OAuth flow failed:', error);
-    await page.screenshot({ path: 'oauth-error.png' });
-  } finally {
-    await browser.close();
-  }
-}
+  it('should not break existing functionality', async () => {
+    // Regression test to ensure fix doesn't break other features
+    const existingFlow = await testExistingWorkflow();
+    expect(existingFlow).toMatchSnapshot();
+  });
+});
 ```
 
-### 5. Timeout Management Commands
+## ESCALATION PATTERNS
 
-**CRITICAL: Always Use Timeouts for Test Execution**
-Following the established pattern from memory, ALWAYS use timeout commands to prevent hanging:
+### When to Escalate
+- Issue persists after 2+ hours of systematic debugging
+- Root cause requires architectural changes
+- Issue affects production systems
+- Solution requires expertise outside your domain
 
-**Quick Operations (30s timeout):**
-```bash
-npx tsx scripts/development/exec-with-timeout.ts --timeout 30 -- <command>
+### How to Escalate
+1. **Document everything**: Provide complete investigation history
+2. **Be specific**: Include exact error messages and reproduction steps
+3. **Show your work**: Explain what you've tried and why
+4. **Suggest options**: Propose potential solutions if you have ideas
+5. **Set context**: Explain business impact and urgency
+
+### Escalation Template
+```markdown
+# Escalation: [Issue Title]
+
+## Summary
+[Brief description of the problem]
+
+## Business Impact
+- **Affected Users**: [Who is impacted]
+- **Severity**: [Critical/High/Medium/Low]
+- **Timeline**: [When this needs to be resolved]
+
+## Investigation Summary
+- **Time Spent**: [Hours invested]
+- **Approaches Tried**: [List of debugging attempts]
+- **Current Status**: [Where you're stuck]
+
+## Technical Details
+- **Error Messages**: [Exact error text]
+- **Reproduction Steps**: [How to reproduce]
+- **Environment**: [System details]
+
+## Requested Help
+- **Specific Question**: [What you need help with]
+- **Suggested Approach**: [Your ideas, if any]
+- **Resources Needed**: [Additional access, tools, etc.]
 ```
 
-**Medium Operations (120s timeout):**
-```bash
-npx tsx scripts/development/exec-with-timeout.ts --timeout 120 -- <command>
-```
+## CONTINUOUS IMPROVEMENT
 
-**Always run tests with timeout**
-```
-npx tsx scripts/development/exec-with-timeout.ts --timeout 30 -- npm run test <test-suite>
-```
+### Post-Debug Review
+After resolving any significant issue:
+1. **Document the solution** in team knowledge base
+2. **Update debugging runbooks** with new patterns
+3. **Improve monitoring** to catch similar issues earlier
+4. **Share learnings** with team in retrospectives
+5. **Update automated tests** to prevent regression
 
-**Always examine test results after running tests**
-```
-npx tsx scripts/development/exec-with-timeout.ts --timeout 30 -- cat test.log
-```
+### Pattern Recognition
+Keep track of:
+- **Common failure modes** in your system
+- **Effective debugging techniques** for different issue types
+- **Tools and commands** that consistently help
+- **Environmental factors** that contribute to issues
+- **Time patterns** when issues typically occur
 
-## DEBUGGING WORKFLOW
-
-### 1. **Initial Setup**
-```bash
-# Start server with long timeout
-npx tsx scripts/development/exec-with-timeout.ts --timeout 3600 -- npm run dev &
-
-# Wait for startup
-sleep 3
-
-# Check server logs
-tail -20 server.log
-```
-
-### 2. **UI Automation with Visual Debugging**
-```bash
-# Run Playwright script with medium timeout
-npx tsx scripts/development/exec-with-timeout.ts --timeout 120 -- npx tsx debug-ui-flow.ts
-```
-
-### 3. **Database Validation**
-```bash
-# Check database state
-npx tsx scripts/development/exec-with-timeout.ts --timeout 30 -- npx tsx check-database-state.ts
-```
-
-### 4. **API Testing**
-```bash
-# Test API endpoints
-npx tsx scripts/development/exec-with-timeout.ts --timeout 30 -- npx tsx test-api-endpoints.ts
-```
-
-### 5. **Log Analysis**
-```bash
-# Check recent logs
-npx tsx scripts/development/exec-with-timeout.ts --timeout 30 -- tail -30 server.log
-```
-
-## COMMON PATTERNS
-
-### Pattern 1: OAuth Flow Debugging
-1. Start server with long timeout
-2. Create Playwright script with screenshots
-3. Run OAuth flow with visual debugging
-4. Check database for token storage
-5. Test API with stored tokens
-6. Analyze logs for any errors
-
-### Pattern 2: API Integration Debugging
-1. Start server and verify it's running
-2. Test API endpoints with curl
-3. Check database for data persistence
-4. Monitor server logs for errors
-5. Fix issues and retest
-
-### Pattern 3: UI Feature Debugging
-1. Navigate to feature in browser
-2. Take screenshots at each step
-3. Perform actions and capture results
-4. Check backend state changes
-5. Verify end-to-end functionality
-
-## ERROR DETECTION
-
-### Server Log Errors to Watch For:
-- `OAuth callback error:`
-- `Database connection failed`
-- `Missing credentials`
-- `Port conflict errors`
-- `TypeScript compilation errors`
-- `API endpoint errors`
-
-### Database State Validation:
-- Check for expected data after operations
-- Verify token storage and expiration
-- Confirm calendar/thread creation
-- Validate credential loading
-
-### API Response Validation:
-- Check HTTP status codes
-- Verify response data structure
-- Test error handling
-- Confirm authentication
-
-## SUCCESS INDICATORS
-
-### OAuth Flow Success:
-- Screenshots show successful page transitions
-- Database contains valid tokens
-- API calls return 200 OK with real data
-- Server logs show successful token exchange
-
-### API Integration Success:
-- All endpoints return expected status codes
-- Database contains persisted data
-- No errors in server logs
-- End-to-end functionality works
-
-### UI Feature Success:
-- Screenshots show correct UI state
-- Actions produce expected results
-- Backend state changes correctly
-- No JavaScript errors in browser console
-
-## CONCLUSION
-
-These patterns provide a systematic approach to debugging complex integrations. The key is combining multiple validation layers (UI, API, Database) with appropriate timeout management and real-time monitoring. Always take screenshots, check database state, and monitor logs to get a complete picture of what's happening.
+This systematic approach ensures that every debugging session contributes to the overall system reliability and team knowledge.
