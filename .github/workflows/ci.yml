@@ -7,30 +7,43 @@ on:
   schedule:
     - cron: '0 6 * * *' # 11 PM PST is 6 AM UTC
       
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+# Sets permissions of the GITHUB_TOKEN
 permissions:
   contents: read
   checks: write
 
-# Cancel in-progress runs on same PR or branch
+# Cancel in-progress runs on same branch
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
 jobs:
   build:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - name: Build
+        run: npm run build
+
+  full-test:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' && github.ref == 'refs/heads/master'
     
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: npm ci
-    
-    - name: Run build
-      run: npm run build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - name: Build
+        run: npm run build
+      - name: Test
+        run: npm test
+        timeout-minutes: 30
