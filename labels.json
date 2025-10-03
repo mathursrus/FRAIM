@@ -1,0 +1,77 @@
+[
+  {
+    "name": "aiagents",
+    "color": "0e8a16",
+    "description": "Issue prepared for AI agent collaboration"
+  },
+  {
+    "name": "status:ready-for-design",
+    "color": "0075ca",
+    "description": "Issue is ready for design phase"
+  },
+  {
+    "name": "status:in-design",
+    "color": "0075ca",
+    "description": "Issue is currently in design phase"
+  },
+  {
+    "name": "status:ready-for-implementation",
+    "color": "7057ff",
+    "description": "Issue is ready for implementation phase"
+  },
+  {
+    "name": "status:in-implementation",
+    "color": "7057ff",
+    "description": "Issue is currently in implementation phase"
+  },
+  {
+    "name": "status:ready-for-testing",
+    "color": "008672",
+    "description": "Issue is ready for testing phase"
+  },
+  {
+    "name": "status:in-testing",
+    "color": "008672",
+    "description": "Issue is currently in testing phase"
+  },
+  {
+    "name": "status:test-exempt",
+    "color": "c5def5",
+    "description": "Implementation is exempt from test requirements"
+  },
+  {
+    "name": "status:blocked",
+    "color": "d73a4a",
+    "description": "Issue is blocked by another issue or external factor"
+  },
+  {
+    "name": "status:needs-review",
+    "color": "fbca04",
+    "description": "Issue or PR needs review"
+  },
+  {
+    "name": "status:approved",
+    "color": "0e8a16",
+    "description": "Issue or PR has been approved"
+  },
+  {
+    "name": "status:needs-revision",
+    "color": "d93f0b",
+    "description": "Issue or PR needs revision based on feedback"
+  },
+  {
+    "name": "priority:high",
+    "color": "d93f0b",
+    "description": "High priority issue"
+  },
+  {
+    "name": "priority:medium",
+    "color": "fbca04",
+    "description": "Medium priority issue"
+  },
+  {
+    "name": "priority:low",
+    "color": "c5def5",
+    "description": "Low priority issue"
+  }
+]
