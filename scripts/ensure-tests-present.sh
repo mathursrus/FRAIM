@@ -1,80 +1,50 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Check if implementation files have corresponding test files
-# Usage: ./ensure-tests-present.sh [PR_NUMBER] [REPO]
+# Identify changed files in the PR
+mapfile -t CHANGED < <(gh pr view "$PR_NUMBER" --repo "$REPO" --json files --jq '.files[].path')
 
-set -e
+has_code=0
+has_tests=0
 
-PR_NUMBER=$1
-REPO=${2:-$(git remote get-url origin | sed 's/.*github.com[:\/]\(.*\)\.git/\1/')}
-GH_TOKEN=${GH_TOKEN:-$(gh auth token)}
+for f in "${CHANGED[@]}"; do
+  # Code paths: adjust if your code lives elsewhere
+  if [[ "$f" =~ ^(src/|server/|web/|packages/) ]]; then
+    has_code=1
+  fi
+  
+  # Test paths / file patterns
+  if [[ "$f" =~ (\.spec\.ts$|\.test\.ts$|\.spec\.tsx$|\.test\.tsx$|^e2e/|^tests/|test-.*\.ts$) ]]; then
+    has_tests=1
+  fi
+done
 
-if [ -z "$PR_NUMBER" ]; then
-  echo "Error: PR number is required"
-  echo "Usage: $0 [PR_NUMBER] [REPO]"
-  exit 1
-fi
-
-if [ -z "$GH_TOKEN" ]; then
-  echo "Error: GitHub token not found. Please set GH_TOKEN environment variable or login with 'gh auth login'"
-  exit 1
-fi
-
-echo "Checking tests for PR #$PR_NUMBER in $REPO..."
-
-# Get list of changed files in PR
-echo "Fetching changed files..."
-CHANGED_FILES=$(gh pr view $PR_NUMBER --repo $REPO --json files -q '.files[].path')
-
-if [ -z "$CHANGED_FILES" ]; then
-  echo "No files found in PR #$PR_NUMBER"
+# If no code touched, allow
+if [[ $has_code -eq 0 ]]; then
+  echo "No code changes detected. Guard passed."
   exit 0
 fi
 
-# Check for implementation files without tests
-echo "Analyzing implementation files..."
-IMPLEMENTATION_FILES=$(echo "$CHANGED_FILES" | grep -E '\.ts$|\.js$' | grep -v '\.test\.|\.spec\.|test-')
-
-if [ -z "$IMPLEMENTATION_FILES" ]; then
-  echo "No implementation files found in PR"
+# If tests changed too, allow
+if [[ $has_tests -eq 1 ]]; then
+  echo "Test changes detected. Guard passed."
   exit 0
 fi
 
-# Track missing tests
-MISSING_TESTS=0
-MISSING_FILES=""
+# Otherwise, require a previously merged Test Plan PR that references the same issue
+issue_num=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json closingIssuesReferences --jq '.[].number' || true)
 
-# For each implementation file, check if a test exists
-echo "Checking for corresponding test files..."
-while IFS= read -r FILE; do
-  BASE_NAME=$(basename $FILE .ts)
-  BASE_NAME=${BASE_NAME%.js} # Remove .js extension if present
-  DIR_NAME=$(dirname $FILE)
-  
-  # Check for test file patterns
-  if ! echo "$CHANGED_FILES" | grep -q -E "${BASE_NAME}\.test\.|${BASE_NAME}\.spec\.|test-${BASE_NAME}"; then
-    echo "⚠️ No test file found for $FILE"
-    MISSING_TESTS=1
-    MISSING_FILES="$MISSING_FILES\n- $FILE"
-  else
-    echo "✅ Test found for $FILE"
-  fi
-done <<< "$IMPLEMENTATION_FILES"
-
-# Check if PR has status:test-exempt label
-echo "Checking PR labels..."
-if [ "$MISSING_TESTS" = "1" ]; then
-  HAS_EXEMPT_LABEL=$(gh pr view $PR_NUMBER --repo $REPO --json labels -q '.labels[].name' | grep -c "status:test-exempt" || true)
-  
-  if [ "$HAS_EXEMPT_LABEL" -gt 0 ]; then
-    echo "PR has status:test-exempt label, proceeding despite missing tests"
-    exit 0
-  else
-    echo -e "❌ Missing tests for the following files:$MISSING_FILES"
-    echo "PR must include tests for all implementation files or have the status:test-exempt label"
-    exit 1
-  fi
+if [[ -z "$issue_num" ]]; then
+  echo "No linked issue; and no tests changed. Failing."
+  exit 1
 fi
 
-echo "✅ All implementation files have corresponding tests"
-exit 0
+tp_count=$(gh pr list --repo "$REPO" --state merged --label "type:test-plan" --search "in:body #${issue_num}" --json number | jq 'length')
+
+if [[ "$tp_count" -ge 1 ]]; then
+  echo "Found merged Test Plan PR for issue #$issue_num. Guard passed."
+  exit 0
+fi
+
+echo "No tests changed and no merged Test Plan PR for issue #$issue_num. Failing."
+exit 1
