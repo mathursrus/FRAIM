@@ -28,7 +28,7 @@ function showHelp() {
     console.log('  O - Observability: Complete visibility into AI activities');
     console.log('  R - Retrospectives: Continuous learning from experience\n');
 
-    console.log('📚 Documentation: https://github.com/mathursrus/Ashley-Calendar-AI/tree/master/FRAIM');
+    console.log('📚 Documentation: https://github.com/mathursrus/FRAIM');
     console.log('🎯 Ready to become an AI manager? Run: npx fraim-framework init');
 }
 
@@ -70,6 +70,42 @@ function showRigor() {
     console.log('✨ Every rule has been tested and proven in real project environments.');
 }
 
+function showStructure() {
+    console.log(banner);
+    console.log('📁 FRAIM Framework Structure\n');
+
+    console.log('📂 /rules/ - Centralized rules for all AI agents');
+    console.log('  • integrity-and-test-ethics.md - Core ethical principles');
+    console.log('  • simplicity.md - Keep solutions simple and focused');
+    console.log('  • architecture.md - Technical architecture principles');
+    console.log('  • continuous-learning.md - Learn from retrospectives and RFCs');
+    console.log('  • successful-debugging-patterns.md - Debug issues systematically\n');
+
+    console.log('📂 /workflows/ - Development phase workflows');
+    console.log('  • design.md - Design phase workflow');
+    console.log('  • implement.md - Implementation phase workflow');
+    console.log('  • test.md - Testing phase workflow');
+    console.log('  • resolve.md - Issue resolution workflow');
+    console.log('  • retrospect.md - Retrospective workflow\n');
+
+    console.log('📂 /templates/ - Standardized templates');
+    console.log('  • /evidence/ - Test evidence templates');
+    console.log('  • /retrospective/ - Retrospective templates');
+    console.log('  • /specs/ - Specification templates');
+    console.log('  • /help/ - Help documentation templates\n');
+
+    console.log('📂 /.github/ - GitHub configuration');
+    console.log('  • /workflows/ - GitHub Actions workflows');
+    console.log('  • pull_request_template.md - PR template\n');
+
+    console.log('📂 /scripts/ - Automation scripts');
+    console.log('  • ensure-tests-present.sh - Test validation script');
+    console.log('  • exec-with-timeout.sh - Command execution with timeout');
+    console.log('  • prep-issue.sh - Issue preparation for AI agents\n');
+
+    console.log('🎯 This structure provides a comprehensive framework for AI agent management!');
+}
+
 async function runSetup() {
     try {
         // Import and run the setup script
@@ -109,6 +145,11 @@ async function main() {
         return;
     }
 
+    if (args.includes('structure')) {
+        showStructure();
+        return;
+    }
+
     if (args.includes('init') || args.includes('setup')) {
         console.log(banner);
         console.log('🚀 Setting up FRAIM in current repository...\n');
@@ -129,5 +170,10 @@ async function main() {
     showHelp();
 }
 
-// Run the CLI
-main();
+// Export the main function for use in other files
+module.exports = { main };
+
+// Run the CLI if this file is executed directly
+if (require.main === module) {
+    main();
+}
