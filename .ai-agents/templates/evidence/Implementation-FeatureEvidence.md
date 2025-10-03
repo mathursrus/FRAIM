@@ -1,9 +1,10 @@
 # Feature: <Title>
 Issue: #<issue>  
-Feature Spec: <Link to Feature Spec, if any>
+Tech Spec: <Link to tech spec>
 PR: <Link to PR>
 
 ## Completeness Evidence
+ - All phases of tech spec complete: Yes/No 
  - Issue tagged with label `phase:impl`: Yes/No
  - Issue tagged with label `status:needs-review`: Yes/No
  - All files committed/synced to branch: Yes/No
@@ -11,38 +12,43 @@ PR: <Link to PR>
    - PR Comment
    - How Addressed
 
-
-## Due Diligence Evidence
- - Reviewed feature spec in detail (if feature spec present): Yes/No
- - Reviewed code base in detail to understand integration points: Yes/No
- - Implemented according to approved design document: Yes/No
- - All acceptance criteria from issue/spec are met: Yes/No
-
-## Implementation Evidence
- - [ ] Core functionality implemented and working
- - [ ] Error handling implemented for edge cases
- - [ ] Input validation and sanitization added
- - [ ] Logging and monitoring added where appropriate
- - [ ] Security considerations addressed
- - [ ] Performance optimizations applied where needed
-   
-## Testing Evidence
- - [ ] Unit tests written and passing
- - [ ] Integration tests written and passing
- - [ ] End-to-end tests written and passing (if applicable)
- - [ ] Manual testing completed successfully
- - [ ] Load/performance testing completed (if applicable)
- - [ ] Security testing completed (if applicable)
+## Implementation Quality Checkpoints
+ - [ ] Code complexity reviewed (no overengineering)
+ - [ ] No resource waste (excessive retries, delays, workarounds)
+ - [ ] Solution based on proven prototype from design phase
+ - [ ] All new files/functions are actually used
 
 ## Validation Evidence
- - [ ] Feature works as specified in all supported environments
- - [ ] No regressions introduced to existing functionality
- - [ ] Code review completed and approved
- - [ ] Documentation updated (API docs, user guides, etc.)
- - [ ] Deployment plan validated
+ - Complete valiation performed as suggested in tech spec: Yes/No
+ - Table with following columns
+    - Validation Step (manual vs automated)
+    - Validation Result (pass vs fail)
+    - Failure Analysis (if fail)
 
-## Continuous Learning
+## New Files/Functions Created
+ - Table with the following columns
+    - File/Function Name
+    - Purpose
+    - Who is using/importing/calling it
+    - Is it actually used? (Yes/No - if No, explain why it exists)
+
+## New Tests Added
+ - Added all tests suggested in tech spec: Yes/No
+ - Table with the following columns
+    - Test Case Name
+    - What is test case validating
+    - Test Result (pass vs fail)
+    - Failure Analysis (if fail)
+
+## Existing Test Suites Run
+ - Table with following columns
+    - Test Suite
+    - Was it Run (if not, why not - it's ok to not run a suite if there is no impact of your work to it as covered in agent-testing-guidelines.md)
+    - Failing Tests
+    - Failure Analysis (if any tests fail)
+
+   
+## Continous Learning
  - Table with following columns
     - Learning
     - Agent Rule Updates (what agent rule file was updated to ensure the learning is durable)
-    - Best Practices (patterns that worked well and should be reused)
