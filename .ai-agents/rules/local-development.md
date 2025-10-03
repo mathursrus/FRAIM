@@ -164,13 +164,34 @@ fi
 echo "✅ Safe working environment confirmed"
 ```
 
+## TESTING PATTERNS
+
+### Mock Service Pattern
+**Use mocks to isolate components during testing**
+
+**Example**:
+```typescript
+const mockApiService = {
+  calls: [],
+  updateResource: async (request) => {
+    mockApiService.calls.push({ method: 'updateResource', request });
+    return { success: true };
+  }
+};
+
+// After running action, validate calls
+const updateCall = mockApiService.calls.find(call => call.method === 'updateResource');
+if (!updateCall) throw new Error('Expected updateResource to be called');
+if (updateCall.request.resourceId !== expectedId) throw new Error('Wrong resource ID');
+```
+
 ## EXAMPLES
 
 ### Good: Proper Workspace Usage
 ```
 ✅ Working Directory: /path/to/{PROJECT_NAME} - Issue 84
-✅ File Operation: edit_file("src/calendar-api.ts")
-✅ Branch Check: feature/84-fix-calendar-sync
+✅ File Operation: edit_file("src/api-service.ts")
+✅ Branch Check: feature/84-fix-api-sync
 ✅ Path Verification: Relative path, no "../" patterns
 ✅ Command: npx tsx .ai-agents/scripts/exec-with-timeout.ts --timeout 30 -- npm test
 ```
@@ -178,7 +199,7 @@ echo "✅ Safe working environment confirmed"
 ### Bad: Workspace Violations
 ```
 ❌ Working Directory: /path/to/{PROJECT_NAME} (main workspace)
-❌ File Operation: edit_file("src/calendar-api.ts")
+❌ File Operation: edit_file("src/api-service.ts")
 ❌ Branch Check: main
 ❌ Path Verification: Working in main workspace
 ❌ Command: npm test (no timeout wrapper)
@@ -187,14 +208,14 @@ echo "✅ Safe working environment confirmed"
 ### Good: Reference Operations
 ```
 ✅ Read from main workspace: read_file("../{PROJECT_NAME}/docs/README.md")
-✅ Search main workspace: grep("calendar", "../{PROJECT_NAME}/src/")
+✅ Search main workspace: grep("api", "../{PROJECT_NAME}/src/")
 ✅ List main workspace: list_dir("../{PROJECT_NAME}/")
 Result: Safe reference without modification
 ```
 
 ### Bad: Modification in Main Workspace
 ```
-❌ Edit main workspace: edit_file("../{PROJECT_NAME}/src/calendar-api.ts")
+❌ Edit main workspace: edit_file("../{PROJECT_NAME}/src/api-service.ts")
 ❌ Delete main workspace: delete_file("../{PROJECT_NAME}/test-file.ts")
 ❌ Search replace main: search_replace("../{PROJECT_NAME}/...")
 Result: Violates workspace separation
