@@ -1,122 +1,251 @@
-name: Phase Change
+name: Phase Change Handler
+
+# This workflow now assumes branches are created by prep-issue.sh
+# It only handles PR creation/updating and status management
 
 on:
   issues:
     types: [labeled]
 
+permissions:
+  issues: write
+  pull-requests: write
+  contents: write
+
 jobs:
-  phase-change:
+  handle-phase-change:
     runs-on: ubuntu-latest
     if: |
-      contains(github.event.label.name, 'status:') ||
-      contains(github.event.label.name, 'aiagents')
+      contains(github.event.label.name, 'phase:') ||
+      (github.event.action == 'unlabeled' && contains(github.event.label.name, 'phase:'))
+    
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/checkout@v4
         with:
-          node-version: 16
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
-      - name: Install GitHub CLI
+      - name: Setup Git
         run: |
-          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-          sudo apt update
-          sudo apt install gh
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Process phase change
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
-          LABEL_NAME: ${{ github.event.label.name }}
-          REPO: ${{ github.repository }}
+      - name: Auth GitHub CLI
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
+      - name: Extract issue details
+        id: issue-details
         run: |
-          echo "Processing phase change for issue #$ISSUE_NUMBER with label $LABEL_NAME"
+          ISSUE_NUMBER="${{ github.event.issue.number }}"
+          ISSUE_TITLE="${{ github.event.issue.title }}"
+          BRANCH_NAME="feature/${ISSUE_NUMBER}-$(echo "$ISSUE_TITLE" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-\|-$//g')"
           
-          # Get current labels
-          LABELS=$(gh issue view $ISSUE_NUMBER --json labels -q '.labels[].name')
+          echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "issue_title=$ISSUE_TITLE" >> $GITHUB_OUTPUT
+
+      - name: Determine current phase
+        id: current-phase
+        run: |
+          LABELS='${{ toJson(github.event.issue.labels) }}'
+          CURRENT_PHASE=""
           
-          # Handle different status labels
-          if [[ "$LABEL_NAME" == "status:ready-for-design" ]]; then
-            # Create feature branch if it doesn't exist
-            BRANCH_NAME="feature/issue-$ISSUE_NUMBER"
-            BRANCH_EXISTS=$(gh api repos/$REPO/branches/$BRANCH_NAME --silent || echo "not_exists")
-            
-            if [ "$BRANCH_EXISTS" = "not_exists" ]; then
-              echo "Creating feature branch: $BRANCH_NAME"
-              gh api repos/$REPO/git/refs -F ref="refs/heads/$BRANCH_NAME" -F sha=$(gh api repos/$REPO/git/refs/heads/master | jq -r '.object.sha')
+          # Extract current phase from labels
+          for label in $(echo "$LABELS" | jq -r '.[].name'); do
+            if [[ $label == phase:* ]]; then
+              CURRENT_PHASE=$label
+              break
             fi
-            
-            # Add comment with design instructions
-            gh issue comment $ISSUE_NUMBER --body "## Design Phase Started
-            
-            This issue is now ready for design. Please follow the design workflow in \`workflows/design.md\`.
-            
-            ### Next Steps
-            1. Create an RFC document in \`/docs/rfcs/\`
-            2. Define the technical approach
-            3. Document implementation plan
-            4. Request review when ready"
-            
-            # Update labels
-            gh issue edit $ISSUE_NUMBER --add-label "status:in-design" --remove-label "status:ready-for-design"
-            
-          elif [[ "$LABEL_NAME" == "status:ready-for-implementation" ]]; then
-            # Add comment with implementation instructions
-            gh issue comment $ISSUE_NUMBER --body "## Implementation Phase Started
-            
-            This issue is now ready for implementation. Please follow the implementation workflow in \`workflows/implement.md\`.
-            
-            ### Next Steps
-            1. Ensure you have the latest code from the feature branch
-            2. Implement according to the approved design
-            3. Write tests for your implementation
-            4. Create a pull request when ready"
-            
-            # Update labels
-            gh issue edit $ISSUE_NUMBER --add-label "status:in-implementation" --remove-label "status:ready-for-implementation"
-            
-          elif [[ "$LABEL_NAME" == "status:ready-for-testing" ]]; then
-            # Add comment with testing instructions
-            gh issue comment $ISSUE_NUMBER --body "## Testing Phase Started
-            
-            This issue is now ready for testing. Please follow the testing workflow in \`workflows/test.md\`.
-            
-            ### Next Steps
-            1. Review the implementation
-            2. Verify all tests are passing
-            3. Perform manual testing if needed
-            4. Document test results"
-            
-            # Update labels
-            gh issue edit $ISSUE_NUMBER --add-label "status:in-testing" --remove-label "status:ready-for-testing"
-            
-          elif [[ "$LABEL_NAME" == "aiagents" ]]; then
-            # Run prep script for AI agents
-            BRANCH_NAME="feature/issue-$ISSUE_NUMBER"
-            
-            # Add kickoff comment for AI agents
-            gh issue comment $ISSUE_NUMBER --body "## AI Agent Kickoff
-            
-            This issue has been prepared for AI agent collaboration.
-            
-            ### Current Status
-            - Branch: \`$BRANCH_NAME\`
-            - Labels: $LABELS
-            
-            ### Next Steps
-            1. Review issue description and requirements
-            2. Follow the RIGOR methodology
-            3. Create necessary design documents
-            4. Implement solution
-            5. Add tests
-            6. Submit PR
-            
-            ### Agent Instructions
-            - Follow all rules in the \`/rules\` directory
-            - Focus on this issue only
-            - Document design decisions
-            - Verify all changes with tests"
+          done
+          
+          echo "current_phase=$CURRENT_PHASE" >> $GITHUB_OUTPUT
+          echo "Current phase: $CURRENT_PHASE"
+
+      - name: Verify branch exists (created by prep-issue.sh)
+        run: |
+          BRANCH_NAME="${{ steps.issue-details.outputs.branch_name }}"
+          
+          # Check if branch exists remotely
+          if git ls-remote --exit-code --heads origin "$BRANCH_NAME" >/dev/null 2>&1; then
+              echo "✓ Branch $BRANCH_NAME exists remotely"
+              git fetch origin "$BRANCH_NAME"
+          else
+              echo "⚠️  Branch $BRANCH_NAME does not exist remotely"
+              echo "   This should have been created by prep-issue.sh"
+              echo "   Please run prep-issue.sh before invoking agent workflows"
+              exit 1
+          fi
+
+      - name: Check if PR already exists
+        id: pr-check
+        run: |
+          BRANCH_NAME="${{ steps.issue-details.outputs.branch_name }}"
+          EXISTING_PR=$(gh pr list --head "$BRANCH_NAME" --json number --jq '.[0].number' 2>/dev/null || echo "")
+          echo "existing_pr=$EXISTING_PR" >> $GITHUB_OUTPUT
+          if [ -n "$EXISTING_PR" ]; then
+            echo "✓ PR #$EXISTING_PR already exists"
+          else
+            echo "ℹ️  No PR exists yet, will create one for phase: ${{ steps.current-phase.outputs.current_phase }}"
+          fi
+
+      - name: phase:spec → create/update PR for Specification phase
+        if: steps.current-phase.outputs.current_phase == 'phase:spec'
+        shell: bash
+        env:
+          ISSUE: ${{ github.event.issue.number }}
+        run: |
+          ISSUE_NUMBER="${{ steps.issue-details.outputs.issue_number }}"
+          ISSUE_TITLE="${{ steps.issue-details.outputs.issue_title }}"
+          BRANCH_NAME="${{ steps.issue-details.outputs.branch_name }}"
+          
+          # Create or update PR for Specification phase
+          PR_TITLE="[Specification] Feature Spec for Issue #$ISSUE_NUMBER: $ISSUE_TITLE"
+          PR_BODY="## Feature Specification for Issue #$ISSUE_NUMBER
+
+          This PR contains the feature specification for: $ISSUE_TITLE
+
+          **Phase:** Specification
+          **Issue:** #$ISSUE_NUMBER
+          **Branch:** \`$BRANCH_NAME\`
+
+          ### Specification Document
+          - 📋 [Feature Specification]($SPEC_FILE)
+
+          **Note:** This is a Specification PR. Design and Implementation will follow after specification approval.
+
+          "
+
+          EXISTING_PR="${{ steps.pr-check.outputs.existing_pr }}"
+          
+          if [ -n "$EXISTING_PR" ]; then
+            echo "Updating existing PR #$EXISTING_PR for Specification phase"
+            gh pr edit "$EXISTING_PR" --title "$PR_TITLE" --body "$PR_BODY"
+            gh pr edit "$EXISTING_PR" --add-label "phase:spec" --remove-label "phase:design" --remove-label "phase:tests" --remove-label "phase:impl" 
+          else
+            echo "Creating new PR for Specification phase"
+            gh pr create --title "$PR_TITLE" --body "$PR_BODY" --base master --head "$BRANCH_NAME" --draft
+            gh pr edit --add-label "phase:spec"
+          fi
+
+      - name: phase:design → create/update PR for Design phase
+        if: steps.current-phase.outputs.current_phase == 'phase:design'
+        shell: bash
+        env:
+          ISSUE: ${{ github.event.issue.number }}
+        run: |
+          ISSUE_NUMBER="${{ steps.issue-details.outputs.issue_number }}"
+          ISSUE_TITLE="${{ steps.issue-details.outputs.issue_title }}"
+          BRANCH_NAME="${{ steps.issue-details.outputs.branch_name }}"
+          
+          # Create or update PR for Design phase
+          PR_TITLE="[Design] RFC for Issue #$ISSUE_NUMBER: $ISSUE_TITLE"
+          PR_BODY="## Design RFC for Issue #$ISSUE_NUMBER
+
+          This PR contains the design RFC for: $ISSUE_TITLE
+
+          **Phase:** Design
+          **Issue:** #$ISSUE_NUMBER
+          **Branch:** \`$BRANCH_NAME\`
+
+          ### RFC Document
+          - 📋 [RFC Document]($RFC_FILE)
+
+          **Note:** This is a Design PR. Implementation will follow in a separate PR after design approval.
+
+          "
+
+          EXISTING_PR="${{ steps.pr-check.outputs.existing_pr }}"
+          
+          if [ -n "$EXISTING_PR" ]; then
+            echo "Updating existing PR #$EXISTING_PR for Design phase"
+            gh pr edit "$EXISTING_PR" --title "$PR_TITLE" --body "$PR_BODY"
+            gh pr edit "$EXISTING_PR" --add-label "phase:design" --remove-label "phase:spec" --remove-label "phase:tests" --remove-label "phase:impl" 
+          else
+            echo "Creating new PR for Design phase"
+            gh pr create --title "$PR_TITLE" --body "$PR_BODY" --base master --head "$BRANCH_NAME" --draft
+            gh pr edit --add-label "phase:design"
+          fi
+
+      - name: phase:tests → create/update PR for Test phase
+        if: steps.current-phase.outputs.current_phase == 'phase:tests'
+        run: |
+          ISSUE_NUMBER="${{ steps.issue-details.outputs.issue_number }}"
+          ISSUE_TITLE="${{ steps.issue-details.outputs.issue_title }}"
+          BRANCH_NAME="${{ steps.issue-details.outputs.branch_name }}"
+          
+          # Create or update PR for Test phase
+          PR_TITLE="[Testing] Test Cases for Issue #$ISSUE_NUMBER: $ISSUE_TITLE"
+          PR_BODY="## Test cases for Issue #$ISSUE_NUMBER
+
+          This PR contains the test cases for: $ISSUE_TITLE
+
+          **Phase:** Tests
+          **Issue:** #$ISSUE_NUMBER
+          **Branch:** \`$BRANCH_NAME\`
+
+          ### Test Cases
+    
+
+          **Note:** This is a Test PR. Implementation will follow after test approval.
+
+          "
+
+          EXISTING_PR="${{ steps.pr-check.outputs.existing_pr }}"
+          
+          if [ -n "$EXISTING_PR" ]; then
+            echo "Updating existing PR #$EXISTING_PR for Test phase"
+            gh pr edit "$EXISTING_PR" --title "$PR_TITLE" --body "$PR_BODY"
+            gh pr edit "$EXISTING_PR" --add-label "phase:tests" --remove-label "phase:spec" --remove-label "phase:design" --remove-label "phase:impl"
+          else
+            echo "Creating new PR for Test phase"
+            gh pr create --title "$PR_TITLE" --body "$PR_BODY" --base master --head "$BRANCH_NAME" --draft
+            gh pr edit --add-label "phase:tests"
+          fi
+
+      - name: phase:impl → create/update PR for Implementation phase
+        if: steps.current-phase.outputs.current_phase == 'phase:impl'
+        run: |
+          ISSUE_NUMBER="${{ steps.issue-details.outputs.issue_number }}"
+          ISSUE_TITLE="${{ steps.issue-details.outputs.issue_title }}"
+          BRANCH_NAME="${{ steps.issue-details.outputs.branch_name }}"
+          
+          # Create or update PR for Implementation phase
+          PR_TITLE="[Implementation] Fixes for Issue #$ISSUE_NUMBER: $ISSUE_TITLE"
+          PR_BODY="## Fixes for Issue #$ISSUE_NUMBER
+
+          This PR contains the fixes for: $ISSUE_TITLE
+
+          **Phase:** Implementation
+          **Issue:** #$ISSUE_NUMBER
+          **Branch:** \`$BRANCH_NAME\`
+
+          ### Fixes
+          
+
+          Closes #$ISSUE_NUMBER
+
+          "
+
+          EXISTING_PR="${{ steps.pr-check.outputs.existing_pr }}"
+          
+          if [ -n "$EXISTING_PR" ]; then
+            echo "Updating existing PR #$EXISTING_PR for Implementation phase"
+            gh pr edit "$EXISTING_PR" --title "$PR_TITLE" --body "$PR_BODY"
+            gh pr edit "$EXISTING_PR" --add-label "phase:impl" --remove-label "phase:spec" --remove-label "phase:design" --remove-label "phase:tests"
+          else
+            echo "Creating new PR for Implementation phase"
+            gh pr create --title "$PR_TITLE" --body "$PR_BODY" --base master --head "$BRANCH_NAME" --draft
+            gh pr edit --add-label "phase:impl"
+          fi
+
+      - name: Normalize ISSUE and PR status to WIP (authoritative)
+        run: |
+          gh issue edit ${{ github.event.issue.number }} --add-label "status:wip" --remove-label "status:needs-review" --remove-label "status:complete" || true
+          
+          # Use the PR number from the check step
+          EXISTING_PR="${{ steps.pr-check.outputs.existing_pr }}"
+          
+          if [ -n "$EXISTING_PR" ]; then
+            gh pr edit "$EXISTING_PR" --add-label "status:wip" --remove-label "status:needs-review" --remove-label "status:complete" || true
           fi
