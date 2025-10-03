@@ -1,0 +1,24 @@
+# This file defines the code owners for the FRAIM repository
+# Code owners are automatically requested for review when someone opens a PR that modifies code they own
+# See: https://docs.github.com/en/repositories/managing-your-codebase-in-github/about-code-owners
+
+# Default owners for everything in the repo
+*       @mathursrus
+
+# Specific ownership for different parts of the codebase
+/agents/         @mathursrus
+/rules/          @mathursrus
+/workflows/      @mathursrus
+/templates/      @mathursrus
+/scripts/        @mathursrus
+/.github/        @mathursrus
+
+# Documentation
+/docs/           @mathursrus
+*.md             @mathursrus
+
+# Configuration files
+*.json           @mathursrus
+*.jsonc          @mathursrus
+*.yml            @mathursrus
+*.yaml           @mathursrus
