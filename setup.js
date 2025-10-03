@@ -177,3 +177,210 @@ async function askInput(question, defaultValue = '') {
         });
     });
 }
+
+// Create project structure
+function createProjectStructure() {
+    // Create directories
+    ensureDirectory('retrospectives');
+    ensureDirectory('docs/rfcs');
+    ensureDirectory('rules');
+    ensureDirectory('templates/evidence');
+    ensureDirectory('templates/retrospective');
+    ensureDirectory('templates/specs');
+    ensureDirectory('templates/help');
+    ensureDirectory('workflows');
+    ensureDirectory('.github/workflows');
+    ensureDirectory('agents/cursor');
+    ensureDirectory('agents/claude');
+    ensureDirectory('agents/windsurf');
+    ensureDirectory('scripts');
+    
+    logSuccess('Created directory structure');
+
+    // Create BUGFIX template
+    const bugfixTemplate = `Issue: #<issue>
+
+## Tests
+- Could be existing tests that are failing and need to be fixed
+- Could be new tests that need to be added into an existing test suite
+- Could be a new test suite
+`;
+    writeFile('docs/rfcs/BUGFIX-TEMPLATE.md', bugfixTemplate);
+    logSuccess('Created BUGFIX-TEMPLATE.md');
+
+    // Create RFC template
+    const rfcTemplate = `# RFC: <Title>
+
+Issue: #<issue>  
+Owner: <agent>
+
+## Design Details
+- User Experience changes (incl. all modalities currently supported: see codebase to know which ones)
+- API surface (OpenAPI) changes
+- Data model / schema changes
+- Failure modes & timeouts
+- Telemetry & analytics
+
+## Test Matrix
+- Unit: modules & edge cases
+- Integration: API <-> DB <-> external
+- E2E: user flows (happy/sad)`;
+    writeFile('docs/rfcs/RFC-TEMPLATE.md', rfcTemplate);
+    logSuccess('Created RFC-TEMPLATE.md');
+
+    // Create basic rule files
+    createRuleFiles();
+    logSuccess('Created rule files');
+
+    // Create workflow templates
+    createWorkflowTemplates();
+    logSuccess('Created workflow templates');
+
+    // Create basic CODEOWNERS file
+    const codeownersContent = `# This file defines the code owners for the repository
+# Code owners are automatically requested for review when someone opens a PR that modifies code they own
+# See: https://docs.github.com/en/repositories/managing-your-codebase-in-github/about-code-owners
+
+# Default owners for everything in the repo
+*       @${process.env.USER || 'repo-owner'}
+
+# Specific ownership for different parts of the codebase
+/rules/          @${process.env.USER || 'repo-owner'}
+/workflows/      @${process.env.USER || 'repo-owner'}
+/templates/      @${process.env.USER || 'repo-owner'}
+/scripts/        @${process.env.USER || 'repo-owner'}
+/.github/        @${process.env.USER || 'repo-owner'}
+
+# Documentation
+/docs/           @${process.env.USER || 'repo-owner'}
+*.md             @${process.env.USER || 'repo-owner'}`;
+    writeFile('CODEOWNERS', codeownersContent);
+    logSuccess('Created CODEOWNERS file');
+
+    // Create basic PR template
+    const prTemplateContent = `# Pull Request
+
+## Description
+<!-- Provide a brief description of the changes in this PR -->
+
+## Related Issue
+<!-- Link to the issue this PR addresses (use format: Closes #123, Fixes #123) -->
+
+## Type of Change
+<!-- Mark the appropriate option with an [x] -->
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Documentation update
+- [ ] Code refactoring
+- [ ] Performance improvement
+- [ ] Tests
+- [ ] Build/CI changes
+- [ ] Other (please describe):
+
+## Implementation Details
+<!-- Provide a detailed description of the implementation -->
+
+## Testing
+<!-- Describe the testing you've done -->
+- [ ] Added unit tests
+- [ ] Added integration tests
+- [ ] Manually tested
+- [ ] Test exempt (explain why)
+
+## Evidence
+<!-- Provide evidence of testing (screenshots, logs, etc.) -->
+
+## Checklist
+<!-- Mark items with [x] once completed -->
+- [ ] Code follows project style guidelines
+- [ ] Documentation has been updated
+- [ ] All tests are passing
+- [ ] PR has been reviewed by at least one team member
+- [ ] Changes have been tested in a development environment
+
+## Additional Notes
+<!-- Any additional information that might be helpful for reviewers -->`;
+    writeFile('.github/pull_request_template.md', prTemplateContent);
+    logSuccess('Created PR template');
+
+    // Create labels.json
+    const labelsContent = `[
+  {
+    "name": "aiagents",
+    "color": "0e8a16",
+    "description": "Issue prepared for AI agent collaboration"
+  },
+  {
+    "name": "status:ready-for-design",
+    "color": "0075ca",
+    "description": "Issue is ready for design phase"
+  },
+  {
+    "name": "status:in-design",
+    "color": "0075ca",
+    "description": "Issue is currently in design phase"
+  },
+  {
+    "name": "status:ready-for-implementation",
+    "color": "7057ff",
+    "description": "Issue is ready for implementation phase"
+  },
+  {
+    "name": "status:in-implementation",
+    "color": "7057ff",
+    "description": "Issue is currently in implementation phase"
+  },
+  {
+    "name": "status:ready-for-testing",
+    "color": "008672",
+    "description": "Issue is ready for testing phase"
+  },
+  {
+    "name": "status:in-testing",
+    "color": "008672",
+    "description": "Issue is currently in testing phase"
+  },
+  {
+    "name": "status:test-exempt",
+    "color": "c5def5",
+    "description": "Implementation is exempt from test requirements"
+  },
+  {
+    "name": "status:blocked",
+    "color": "d73a4a",
+    "description": "Issue is blocked by another issue or external factor"
+  },
+  {
+    "name": "status:needs-review",
+    "color": "fbca04",
+    "description": "Issue or PR needs review"
+  },
+  {
+    "name": "status:approved",
+    "color": "0e8a16",
+    "description": "Issue or PR has been approved"
+  },
+  {
+    "name": "status:needs-revision",
+    "color": "d93f0b",
+    "description": "Issue or PR needs revision based on feedback"
+  },
+  {
+    "name": "priority:high",
+    "color": "d93f0b",
+    "description": "High priority issue"
+  },
+  {
+    "name": "priority:medium",
+    "color": "fbca04",
+    "description": "Medium priority issue"
+  },
+  {
+    "name": "priority:low",
+    "color": "c5def5",
+    "description": "Low priority issue"
+  }
+]`;
+    writeFile('labels.json', labelsContent);
+    logSuccess('Created labels.json');
+}
