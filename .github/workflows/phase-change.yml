@@ -1,0 +1,122 @@
+name: Phase Change
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  phase-change:
+    runs-on: ubuntu-latest
+    if: |
+      contains(github.event.label.name, 'status:') ||
+      contains(github.event.label.name, 'aiagents')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install GitHub CLI
+        run: |
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt update
+          sudo apt install gh
+
+      - name: Process phase change
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          LABEL_NAME: ${{ github.event.label.name }}
+          REPO: ${{ github.repository }}
+        run: |
+          echo "Processing phase change for issue #$ISSUE_NUMBER with label $LABEL_NAME"
+          
+          # Get current labels
+          LABELS=$(gh issue view $ISSUE_NUMBER --json labels -q '.labels[].name')
+          
+          # Handle different status labels
+          if [[ "$LABEL_NAME" == "status:ready-for-design" ]]; then
+            # Create feature branch if it doesn't exist
+            BRANCH_NAME="feature/issue-$ISSUE_NUMBER"
+            BRANCH_EXISTS=$(gh api repos/$REPO/branches/$BRANCH_NAME --silent || echo "not_exists")
+            
+            if [ "$BRANCH_EXISTS" = "not_exists" ]; then
+              echo "Creating feature branch: $BRANCH_NAME"
+              gh api repos/$REPO/git/refs -F ref="refs/heads/$BRANCH_NAME" -F sha=$(gh api repos/$REPO/git/refs/heads/master | jq -r '.object.sha')
+            fi
+            
+            # Add comment with design instructions
+            gh issue comment $ISSUE_NUMBER --body "## Design Phase Started
+            
+            This issue is now ready for design. Please follow the design workflow in \`workflows/design.md\`.
+            
+            ### Next Steps
+            1. Create an RFC document in \`/docs/rfcs/\`
+            2. Define the technical approach
+            3. Document implementation plan
+            4. Request review when ready"
+            
+            # Update labels
+            gh issue edit $ISSUE_NUMBER --add-label "status:in-design" --remove-label "status:ready-for-design"
+            
+          elif [[ "$LABEL_NAME" == "status:ready-for-implementation" ]]; then
+            # Add comment with implementation instructions
+            gh issue comment $ISSUE_NUMBER --body "## Implementation Phase Started
+            
+            This issue is now ready for implementation. Please follow the implementation workflow in \`workflows/implement.md\`.
+            
+            ### Next Steps
+            1. Ensure you have the latest code from the feature branch
+            2. Implement according to the approved design
+            3. Write tests for your implementation
+            4. Create a pull request when ready"
+            
+            # Update labels
+            gh issue edit $ISSUE_NUMBER --add-label "status:in-implementation" --remove-label "status:ready-for-implementation"
+            
+          elif [[ "$LABEL_NAME" == "status:ready-for-testing" ]]; then
+            # Add comment with testing instructions
+            gh issue comment $ISSUE_NUMBER --body "## Testing Phase Started
+            
+            This issue is now ready for testing. Please follow the testing workflow in \`workflows/test.md\`.
+            
+            ### Next Steps
+            1. Review the implementation
+            2. Verify all tests are passing
+            3. Perform manual testing if needed
+            4. Document test results"
+            
+            # Update labels
+            gh issue edit $ISSUE_NUMBER --add-label "status:in-testing" --remove-label "status:ready-for-testing"
+            
+          elif [[ "$LABEL_NAME" == "aiagents" ]]; then
+            # Run prep script for AI agents
+            BRANCH_NAME="feature/issue-$ISSUE_NUMBER"
+            
+            # Add kickoff comment for AI agents
+            gh issue comment $ISSUE_NUMBER --body "## AI Agent Kickoff
+            
+            This issue has been prepared for AI agent collaboration.
+            
+            ### Current Status
+            - Branch: \`$BRANCH_NAME\`
+            - Labels: $LABELS
+            
+            ### Next Steps
+            1. Review issue description and requirements
+            2. Follow the RIGOR methodology
+            3. Create necessary design documents
+            4. Implement solution
+            5. Add tests
+            6. Submit PR
+            
+            ### Agent Instructions
+            - Follow all rules in the \`/rules\` directory
+            - Focus on this issue only
+            - Document design decisions
+            - Verify all changes with tests"
+          fi
