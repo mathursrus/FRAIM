@@ -46,12 +46,14 @@ FRAIM/
 ├── labels.json                  # Standardized GitHub labels
 ├── CODEOWNERS                   # Code ownership rules
 │
-├── rules/                       # Centralized rules directory
-│   ├── integrity-and-test-ethics.md  # Core ethical principles
-│   ├── simplicity.md            # Guidelines for keeping solutions simple
-│   ├── architecture.md          # Technical architecture principles
-│   ├── continuous-learning.md   # Learning from retrospectives and RFCs
-│   └── successful-debugging-patterns.md  # Debug issues systematically
+├── .ai-agents/                  # Centralized AI agent rules
+│   ├── README.md                # Overview of AI agent rules
+│   └── rules/                   # Individual rule files
+│       ├── integrity-and-test-ethics.md  # Core ethical principles
+│       ├── simplicity.md        # Guidelines for keeping solutions simple
+│       ├── architecture.md      # Technical architecture principles
+│       ├── continuous-learning.md  # Learning from retrospectives and RFCs
+│       └── successful-debugging-patterns.md  # Debug issues systematically
 │
 ├── templates/                   # Standardized templates
 │   ├── evidence/                # Test evidence templates
@@ -70,7 +72,9 @@ FRAIM/
 ├── .github/                     # GitHub configuration
 │   ├── workflows/               # GitHub Actions workflows
 │   │   ├── ci.yml               # Continuous integration workflow
-│   │   └── phase-change.yml     # Development phase transitions
+│   │   ├── phase-change.yml     # Development phase transitions
+│   │   ├── status-change.yml    # Status change handling
+│   │   └── sync-on-pr-review.yml # Sync issues on PR review
 │   └── pull_request_template.md # PR template
 │
 ├── agents/                      # AI agent configurations
@@ -112,7 +116,7 @@ FRAIM/
 - **Getting Started**: `/docs/guides/getting-started.md`
 - **RFC Template**: `/templates/specs/rfc-template.md`
 - **Distribution Guide**: `DISTRIBUTION.md`
-- **Centralized Rules**: `/rules/` directory (all tested and proven)
+- **Centralized Rules**: `/.ai-agents/rules/` directory (all tested and proven)
 - **Workflow Templates**: `/workflows/` directory
 
 ## 🚀 Usage Examples
