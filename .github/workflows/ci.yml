@@ -31,6 +31,8 @@ jobs:
       - run: npm install
       - name: Build
         run: npm run build
+      - name: Test Smoke CI
+        run: npm run test-smoke-ci
 
   full-test:
     runs-on: ubuntu-latest
@@ -44,6 +46,6 @@ jobs:
       - run: npm install
       - name: Build
         run: npm run build
-      - name: Test
-        run: npm test
+      - name: Test All CI
+        run: npm run test-all-ci
         timeout-minutes: 30

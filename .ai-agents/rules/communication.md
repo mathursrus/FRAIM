@@ -23,9 +23,9 @@ Always provide clear progress updates with:
 5. **Blocking issues** (if any)
 
 ### Status Reporting
-- **Be specific**: "Fixed calendar sync timeout" not "Made changes"
-- **Include evidence**: "Tests run: npm test test-calendar-sync.ts ✅ PASSED"
-- **Show concrete progress**: "Files modified: src/calendar-api.ts, test-calendar-sync.ts"
+- **Be specific**: "Fixed API integration timeout" not "Made changes"
+- **Include evidence**: "Tests run: npm test test-api-integration.ts ✅ PASSED"
+- **Show concrete progress**: "Files modified: src/api-client.ts, test-api-integration.ts"
 - **Indicate readiness**: "Ready for code review" vs "Still working on implementation"
 
 ### Communication Channel
@@ -44,10 +44,10 @@ Always provide clear progress updates with:
 ### Good: Clear Progress Update
 ```
 Summary:
-  - Local progress: Fixed calendar sync timeout, added retry logic, ran tests
-  - Files modified: src/calendar-api.ts, test-calendar-sync.ts
-  - Tests run: npm test test-calendar-sync.ts ✅ PASSED
-  - Remote status: Branch feature/84-fix-sync pushed, Draft PR created
+  - Local progress: Fixed API integration timeout, added retry logic, ran tests
+  - Files modified: src/api-client.ts, test-api-integration.ts
+  - Tests run: npm test test-api-integration.ts ✅ PASSED
+  - Remote status: Branch feature/84-fix-integration pushed, Draft PR created
   - Next steps: Wait for code review
   - Blocking issues: None
 ```
@@ -62,8 +62,8 @@ Summary:
 
 ### Good: Specific Status Update
 ```
-Issue #84: "Fix calendar sync timeout"
-- ✅ Identified root cause: Missing retry logic in calendar API
+Issue #84: "Fix API integration timeout"
+- ✅ Identified root cause: Missing retry logic in API client
 - ✅ Implemented exponential backoff with jitter
 - ✅ Added comprehensive test coverage (5 new test cases)
 - ✅ All tests passing locally
@@ -74,7 +74,7 @@ Issue #84: "Fix calendar sync timeout"
 
 ### Bad: Generic Status Update
 ```
-Issue #84: "Fix calendar sync timeout"
+Issue #84: "Fix API integration timeout"
 - Working on it
 - Made some changes
 - Need to test more

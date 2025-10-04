@@ -83,8 +83,8 @@ return true;
 
 ```typescript
 // BAD: Mock that doesn't track calls
-const mockCalendarService = {
-  updateCalendarEvent: async () => ({ success: true })
+const mockDataService = {
+  updateRecord: async () => ({ success: true })
 };
 
 // BAD: No validation of what was called
@@ -99,13 +99,13 @@ await actionOrchestrator.processHITLApproval(testRecord);
 
 ```typescript
 // GOOD: Mock with call tracking
-const createMockCalendarService = () => {
+const createMockDataService = () => {
   const calls: any[] = [];
   return {
     calls, // Expose calls for validation
-    updateCalendarEvent: async (request: any) => {
-      calls.push({ method: 'updateCalendarEvent', request });
-      return { success: true, eventId: request.eventId };
+    updateRecord: async (request: any) => {
+      calls.push({ method: 'updateRecord', request });
+      return { success: true, recordId: request.recordId };
     }
   };
 };
@@ -116,11 +116,11 @@ const createMockCalendarService = () => {
 
 ```typescript
 // GOOD: Validating actual behavior
-const calendarCalls = mockCalendarService.calls;
-const updateCall = calendarCalls.find(call => call.method === 'updateCalendarEvent');
+const dataCalls = mockDataService.calls;
+const updateCall = dataCalls.find(call => call.method === 'updateRecord');
 
 if (!updateCall) {
-  console.log('❌ Expected updateCalendarEvent to be called');
+  console.log('❌ Expected updateRecord to be called');
   return false;
 }
 
@@ -142,14 +142,14 @@ if (updateRequest.updates.summary !== 'Expected Summary') {
 ```typescript
 // GOOD: Validate multiple service interactions
 const validateServiceInteractions = (mocks: any) => {
-  // Calendar Service Validation
-  const calendarCalls = mocks.calendarService.calls;
-  const updateCall = calendarCalls.find(call => call.method === 'updateCalendarEvent');
-  if (!updateCall || updateCall.request.eventId !== expectedEventId) {
-    throw new Error('Calendar service not called correctly');
+  // Data Service Validation
+  const dataCalls = mocks.dataService.calls;
+  const updateCall = dataCalls.find(call => call.method === 'updateRecord');
+  if (!updateCall || updateCall.request.recordId !== expectedRecordId) {
+    throw new Error('Data service not called correctly');
   }
 
-  // Email Service Validation  
+  // Notification Service Validation  
   const emailCalls = mocks.emailService.calls;
   const sendCall = emailCalls.find(call => call.method === 'sendReply');
   if (!sendCall || !sendCall.request.recipients.includes('expected@email.com')) {
@@ -486,11 +486,11 @@ Before marking any work complete:
 - **UI Layer**: Verify user interface displays and functions correctly
 - **Integration Layer**: Test end-to-end workflows
 
-**Example**: When fixing preference executive ID issues:
-1. Check database: `node check-preferences.js` → verify `executive_id` field
-2. Test API: `curl -H "x-executive-id: exec-sid-001" /preferences` → verify response
+**Example**: When fixing user preference issues:
+1. Check database: `node check-preferences.js` → verify `user_id` field
+2. Test API: `curl -H "x-user-id: user-001" /preferences` → verify response
 3. Test UI: Use Playwright to navigate and interact → verify functionality
-4. Test isolation: Switch executives and verify data separation
+4. Test isolation: Switch users and verify data separation
 
 #### **2. Root Cause Analysis Pattern**
 **Pattern**: Don't just fix symptoms, identify and fix root causes
@@ -507,8 +507,8 @@ Before marking any work complete:
 
 #### **4. Data Consistency Verification Pattern**
 **Pattern**: Always verify data consistency across systems
-- **Calendar Design**: Ensure `Calendar.id` vs `Calendar.calendarId` vs `CalendarToken.calendarId` consistency
-- **Executive Context**: Verify `executive_id` is used consistently across all APIs
+- **Data Design**: Ensure `Record.id` vs `Record.recordId` vs `Token.recordId` consistency
+- **User Context**: Verify `user_id` is used consistently across all APIs
 - **Database Queries**: Ensure query fields match stored data fields
 
 #### **5. User-Centric Testing Pattern**
@@ -535,9 +535,9 @@ Before marking any work complete:
 - **Right**: "Let me check the UI code to see how it calls the API"
 
 #### **4. Incomplete Multi-Tenancy Testing**
-**Anti-Pattern**: Only testing one user/executive
-- **Wrong**: "Sid can see his preferences, multi-tenancy works"
-- **Right**: "Sid sees his preferences, Jane sees empty list, isolation confirmed"
+**Anti-Pattern**: Only testing one user
+- **Wrong**: "User1 can see their preferences, multi-tenancy works"
+- **Right**: "User1 sees their preferences, User2 sees empty list, isolation confirmed"
 
 #### **5. Database Assumption Anti-Pattern**
 **Anti-Pattern**: Assuming database structure without verification

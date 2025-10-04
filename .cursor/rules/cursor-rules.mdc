@@ -1,0 +1,8 @@
+---
+description: Centralized AI agent rules for Cursor
+alwaysApply: true
+---
+
+# Cursor AI Agent Rules
+
+Thoroughly review `.ai-agents/agent-guardrails.md`

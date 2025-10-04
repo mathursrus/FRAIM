@@ -1,0 +1,34 @@
+// This is a template file to set up MCP servers for dev purposes. Follow these steps
+// 1. Replace <your github pat> with your github personal access token
+// 2. Replace <your context7 api key> with your context7 api key
+// 3. Remove the comments from the file
+//
+// Depending on the coding agent you are using, do the following:
+// Windsurf: Copy this file to .codeium/windsurf/mcp.json (at the user's home directory)
+// Cursor: Copy this file to .cursor/mcp.json
+// Claude: Append the mcpServers object to .claude/settings.json
+
+{
+  "mcpServers": {
+    "git": {
+      "command": "npx",
+      "args": ["-y", "@cyanheads/git-mcp-server"]
+    },
+    "github": {
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer <your github pat>"
+      }
+    },
+    "context7": {
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "<your context7 api key>"
+      }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp"]
+    }
+  }
+}
