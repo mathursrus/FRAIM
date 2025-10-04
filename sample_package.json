@@ -1,0 +1,18 @@
+{
+    "scripts": {
+      "build": "tsc",
+      "dev": "npx tsx --watch src/server.ts > server.log 2>&1",
+      "test": "set EXCLUDE_TAGS=baml,flaky,failing&& npx tsx --test --test-concurrency=1 --test-reporter tap %npm_config_test% > test.log 2>&1",
+      "test-smoke": "set TAGS=smoke&& npx tsx --test --test-concurrency=1 --test-reporter tap %npm_config_test% > test.log 2>&1",
+      "test-smoke-ci": "set TAGS=smoke&& npx tsx --test --test-concurrency=1 --test-reporter tap test*.ts",
+      "test-flaky": "set TAGS=flaky&& npx tsx --test --test-concurrency=1 --test-reporter tap %npm_config_test% > test.log 2>&1",
+      "test-failing": "set TAGS=failing&& npx tsx --test --test-concurrency=1 --test-reporter tap %npm_config_test% > test.log 2>&1",
+      "test-baml": "set TAGS=baml&& npx tsx --test --test-concurrency=1 --test-reporter tap %npm_config_test% > test.log 2>&1",
+      "test-all": "tsx --test --test-concurrency=1 --test-reporter tap",
+      "test-all-ci": "set EXCLUDE_TAGS=flaky,failing&& tsx --test --test-concurrency=1 --test-reporter tap test*.ts",
+      "generate": "baml-cli generate",
+      "lint": "eslint *.ts",
+      "lint:fix": "eslint *.ts --fix",
+    }
+  }
+  

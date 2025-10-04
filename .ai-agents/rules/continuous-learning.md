@@ -49,7 +49,7 @@ Result: Eventually found retrospective, but too late
 ```
 
 ## RETROSPECTIVE CREATION
-- **Use template**: `retrospectives/RETROSPECTIVE-TEMPLATE.md` for consistent structure
-- **Follow process**: Use the `retrospect.mdc` rule for retrospective creation workflow
+- **Use template**: `templates/retrospective/retro-template.md` for consistent structure
+- **Follow process**: Use the `retrospect.md` workflow for retrospective creation
 
 Remember: The best code is often written by those who learn from history rather than repeat it.

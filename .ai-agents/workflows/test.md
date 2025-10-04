@@ -1,129 +1,90 @@
----
-description: Testing phase workflow for feature development
----
+# Testing Phase
 
-# Testing Phase Workflow
+## INTENT
+To create comprehensive test coverage that accurately reproduces issues and validates solutions, ensuring robust testing through proper test structure, failure verification, and systematic test execution.
 
-This workflow guides agents through the testing phase of feature development.
+## PRINCIPLES
+- **Test-Driven**: Write tests that reproduce the issue before fixing
+- **Comprehensive Coverage**: Ensure all scenarios are tested
+- **Failure Verification**: Confirm tests fail before implementation
+- **Proper Structure**: Use established test patterns and frameworks
+- **Systematic Execution**: Follow consistent testing procedures
 
-## Prerequisites
-- Issue exists with `phase:tests` label
-- Design document approved
-- Implementation plan defined
-- Branch created for the issue
+## TESTING WORKFLOW
 
-## Steps
+### Step 1: Issue Identification
+Ask for {issue_number} (and optional {slug}); confirm target branch feature/{issue_number}-{slug}.
 
-### 1. Test Planning
+### Step 2: Phase Initiation
+Label the issue 'phase:tests'. (GitHub Action will automatically label the issue `status:wip` and update the existing draft PR)
 
-- Review requirements and design
-- Identify test scenarios and cases
-- Plan test data requirements
-- Define test environments
-- Create test execution strategy
+### Step 3: Environment Setup
+**IMPORTANT**: The user has already run `prep-issue.sh` which has:
+- ✅ Created the feature branch
+- ✅ Checked out the branch
+- ✅ Created draft PR
+- ✅ Indexed the codebase with Serena
+- ✅ Opened the editor in the prepared workspace
 
-### 2. Test Case Development
+You can start working immediately in the prepared environment. No need to create branches or wait for GitHub Actions.
 
-// turbo
-```bash
-# Run existing tests to understand patterns
-npx tsx .ai-agents/scripts/exec-with-timeout.ts --timeout 300 -- npm test
+### Step 4: Work Location
+You are already in the correct workspace prepared by the user. Confirm you're on the right branch and start working. 
+
+### Step 5: Testing Work
+Your work entails the following:
+
+- Review the RFC associated with this issue.
+- Determine whether tests need to be added to an existing test suite, or a new one needs to be created.
+- **CRITICAL: Write INTEGRATION tests that demonstrate the REAL USER SCENARIO**
+  - Test the actual end-to-end user experience, not unit tests for hypothetical fixes
+  - Use real services and APIs where possible (not mocks)
+  - Verify the issue occurs in the real system as described in the issue
+  - Example: For email threading issues, actually send emails and verify they appear as new messages vs replies
+- Run the test cases to ensure they fail (demonstrating the issue exists)
+- Flip issue to 'status:needs-review' and remove 'status:wip'
+
+**❌ DO NOT:**
+- Write unit tests for code that doesn't exist yet
+- Test hypothetical fixes or solutions
+- Create mock tests that don't use real services
+- Test individual components in isolation
+
+**✅ DO:**
+- Test the complete user workflow end-to-end
+- Use real APIs and services when possible
+- Verify the actual problem described in the issue
+- Create tests that will pass AFTER the fix is implemented
+
+### Step 6: Iteration
+If workflow actions or reviewer feedback indicates more work is needed, ensure the issue is set back to `status:wip` and continue working as above.
+
+## EXAMPLES
+
+### Good: Comprehensive Testing Process
+```
+Issue #84: "Fix calendar sync timeout"
+1. ✅ Identified: Issue #84, branch feature/84-fix-sync
+2. ✅ Phase: Set phase:tests, PR created
+3. ✅ Environment: User ran prep-issue.sh, ready to work
+4. ✅ Location: Working in prepared workspace with Serena indexing
+5. ✅ RFC Review: Read docs/rfcs/84-fix-sync-timeout.md
+6. ✅ Analysis: Determined need to add timeout tests
+7. ✅ Test Creation: Added test cases for timeout scenarios
+8. ✅ Failure Verification: Confirmed tests fail before fix
+9. ✅ Review: Set status:needs-review
+10. ✅ Iteration: Incorporated feedback, updated tests
+Result: Comprehensive test coverage with proper structure
 ```
 
-- Write unit test cases
-- Create integration test scenarios
-- Develop end-to-end test flows
-- Design performance test cases
-- Plan security test scenarios
-
-### 3. Test Implementation
-
-- Implement unit tests
-- Create integration tests
-- Build end-to-end test automation
-- Set up performance testing
-- Configure security testing
-
-### 4. Test Execution
-
-// turbo
-```bash
-# Execute comprehensive test suite
-npx tsx .ai-agents/scripts/exec-with-timeout.ts --timeout 1800 -- npm run test-comprehensive
+### Bad: Incomplete Testing Process
 ```
-
-- Run all test suites
-- Execute manual test scenarios
-- Perform exploratory testing
-- Validate edge cases
-- Test error conditions
-
-### 5. Results Analysis
-
-- Analyze test results
-- Document defects found
-- Assess test coverage
-- Evaluate performance metrics
-- Review security findings
-
-### 6. Test Documentation
-
-- Document test cases and procedures
-- Create test execution reports
-- Update test maintenance guides
-- Document known issues
-- Create troubleshooting guides
-
-## Test Types
-
-### Unit Tests
-- Test individual components
-- Mock dependencies
-- Fast execution
-- High code coverage
-
-### Integration Tests
-- Test component interactions
-- Use real dependencies where possible
-- Validate data flow
-- Test API contracts
-
-### End-to-End Tests
-- Test complete user workflows
-- Use production-like environment
-- Validate user experience
-- Test critical business paths
-
-### Performance Tests
-- Load testing
-- Stress testing
-- Volume testing
-- Scalability testing
-
-### Security Tests
-- Authentication testing
-- Authorization testing
-- Input validation testing
-- Vulnerability scanning
-
-## Completion Criteria
-
-- [ ] All test cases implemented
-- [ ] Test suite execution successful
-- [ ] Coverage targets met
-- [ ] Performance requirements validated
-- [ ] Security requirements verified
-- [ ] Test documentation complete
-- [ ] Issue tagged with `status:complete`
-
-## Quality Gates
-
-- Test coverage >= 80%
-- All critical paths tested
-- Performance within acceptable limits
-- No high-severity security issues
-- All tests automated where possible
-
-## Next Phase
-
-Once testing is complete, move to implementation phase by updating issue label to `phase:impl`.
+Issue #84: "Fix calendar sync timeout"
+1. ✅ Identified: Issue #84
+2. ❌ Skip: Didn't review RFC
+3. ❌ Skip: Started testing without understanding requirements
+4. ❌ Skip: No test cases written
+5. ❌ Skip: Didn't verify tests fail
+6. ❌ Skip: No test structure followed
+Result: Incomplete, ineffective testing
+```

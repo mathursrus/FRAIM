@@ -98,7 +98,7 @@ echo "Current directory: $CURRENT_DIR"
 echo "Parent directory: $PARENT_DIR"
 
 # Define clone directory name
-CLONE_DIR="{PROJECT_NAME} - Issue $ISSUE_NUMBER"
+CLONE_DIR="FRAIM - Issue $ISSUE_NUMBER"
 CLONE_PATH="$PARENT_DIR/$CLONE_DIR"
 
 # Check if directory already exists
@@ -114,7 +114,7 @@ else
 
 # Clone the repository
 echo "Cloning to: $CLONE_PATH"
-git clone {REPOSITORY_URL} "$CLONE_DIR"
+git clone https://github.com/mathursrus/FRAIM.git "$CLONE_DIR"
 
 # Change into the cloned repository
 cd "$CLONE_DIR"
