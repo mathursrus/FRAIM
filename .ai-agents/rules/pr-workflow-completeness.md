@@ -150,7 +150,7 @@ Response: Waiting for user to tell me about feedback
 ### Good: Thorough Test Documentation
 ```
 Before setting status:needs-review:
-- Ran tests: npm test test-calendar-sync.ts
+- Ran tests: npm test test-api-integration.ts
 - Results: 10/10 tests passing
 - Coverage: 95% of code paths tested
 - Evidence: Full test output included in comment
@@ -164,7 +164,7 @@ Documentation: None provided about test results
 
 ### Good: Proper Bug Fix Workflow
 ```
-Bug: Calendar sync timeout
+Bug: API integration timeout
 Process:
 1. Reproduced by setting up test environment with slow network
 2. Wrote test case that fails due to timeout
@@ -175,7 +175,7 @@ Process:
 
 ### Bad: Incomplete Bug Fix
 ```
-Bug: Calendar sync timeout
+Bug: API integration timeout
 Process: Added retry logic without reproducing or testing
 ```
 
