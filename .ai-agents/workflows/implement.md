@@ -125,7 +125,7 @@ If workflow actions or reviewer feedback indicates more work is needed:
 
 ### Good: Proper Implementation Process
 ```
-Issue #84: "Fix calendar sync timeout"
+Issue #84: "Fix API integration timeout"
 1. ✅ Identified: Issue #84, branch feature/84-fix-sync
 2. ✅ Phase: Set phase:impl, PR created
 3. ✅ Environment: User ran prep-issue.sh, ready to work
@@ -141,7 +141,7 @@ Result: Clean, tested implementation following design
 
 ### Bad: Incomplete Implementation Process
 ```
-Issue #84: "Fix calendar sync timeout"
+Issue #84: "Fix API integration timeout"
 1. ✅ Identified: Issue #84
 2. ❌ Skip: Didn't review RFC
 3. ❌ Skip: Started coding without understanding requirements

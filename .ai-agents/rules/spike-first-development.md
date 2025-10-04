@@ -109,9 +109,9 @@ Prevent the "Build First, Integrate Later" anti-pattern that leads to wasted wor
 ### ✅ GOOD: Jinja Templating Implementation
 ```
 1. SPIKE: Test {% if true %}Hello{% endif %} in BAML (5 min)
-2. ANALYZE: Examine CalendarIntent/AccountabilityInfo classes (10 min)
+2. ANALYZE: Examine UserIntent/UserInfo classes (10 min)
 3. IDENTIFY: Map prompt sections to conditional opportunities (15 min)
-4. IMPLEMENT: Add {% if accountability.accountable_party == "@me" %} around booking logic (20 min)
+4. IMPLEMENT: Add {% if user.role == "admin" %} around admin logic (20 min)
 5. VALIDATE: Run tests, ensure functionality preserved (10 min)
 6. REPEAT: Add next conditional incrementally
 ```

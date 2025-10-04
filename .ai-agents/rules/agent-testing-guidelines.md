@@ -150,10 +150,10 @@ const validateServiceInteractions = (mocks: any) => {
   }
 
   // Notification Service Validation  
-  const emailCalls = mocks.emailService.calls;
-  const sendCall = emailCalls.find(call => call.method === 'sendReply');
-  if (!sendCall || !sendCall.request.recipients.includes('expected@email.com')) {
-    throw new Error('Email service not called correctly');
+  const notificationCalls = mocks.notificationService.calls;
+  const sendCall = notificationCalls.find(call => call.method === 'sendMessage');
+  if (!sendCall || !sendCall.request.recipients.includes('expected@example.com')) {
+    throw new Error('Notification service not called correctly');
   }
 
   // Database Service Validation

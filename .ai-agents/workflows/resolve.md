@@ -125,7 +125,7 @@ gh issue close <ISSUE_NUMBER> --comment "✅ Issue resolved and merged to master
 
 ### Good: Proper Resolution Process
 ```
-Issue #84: "Fix calendar sync timeout"
+Issue #84: "Fix API integration timeout"
 PREREQUISITE: ✅ Development complete, tests passed, PR approved
 1. ✅ Merge: Used `gh pr merge <PR_NUMBER> --rebase`
 2. ✅ Conflicts: Resolved conflicts intelligently (kept master's base)
@@ -140,7 +140,7 @@ Result: Complete resolution with no work loss
 
 ### Bad: Incomplete Resolution
 ```
-Issue #84: "Fix calendar sync timeout"
+Issue #84: "Fix API integration timeout"
 PREREQUISITE: ✅ Development complete, tests passed, PR approved
 1. ✅ Merge: Used `gh pr merge <PR_NUMBER> --rebase`
 2. ❌ Skip: Didn't wait for master CI smoke tests

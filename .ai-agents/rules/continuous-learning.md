@@ -28,7 +28,7 @@ To prevent repeating past mistakes and build upon existing solutions by systemat
 
 ### Good: Learning from History
 ```
-Issue: "Fix calendar sync timeout"
+Issue: "Fix API integration timeout"
 Before Starting: 
 - ✅ Read retrospective on issue-45 (similar timeout problem)
 - ✅ Found root cause: missing retry logic
@@ -39,7 +39,7 @@ Result: Fixed in 1 iteration using proven approach
 
 ### Bad: Ignoring History
 ```
-Issue: "Fix calendar sync timeout"
+Issue: "Fix API integration timeout"
 Approach: 
 - ❌ Started coding immediately without research
 - ❌ Implemented naive retry logic

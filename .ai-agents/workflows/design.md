@@ -96,7 +96,7 @@ If workflow actions or reviewer feedback indicates more work is needed:
 
 ### Good: Comprehensive Design Process
 ```
-Issue #84: "Fix calendar sync timeout"
+Issue #84: "Fix API integration timeout"
 1. ✅ Identified: Issue #84, slug: "fix-sync-timeout"
 2. ✅ Phase: Set phase:design, PR created
 3. ✅ Environment: User ran prep-issue.sh, ready to work
@@ -110,7 +110,7 @@ Result: Clear, actionable design document
 
 ### Bad: Incomplete Design Process
 ```
-Issue #84: "Fix calendar sync timeout"
+Issue #84: "Fix API integration timeout"
 1. ✅ Identified: Issue #84
 2. ❌ Skip: Didn't set phase:design
 3. ❌ Skip: Didn't create branch

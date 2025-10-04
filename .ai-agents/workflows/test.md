@@ -40,7 +40,7 @@ Your work entails the following:
   - Test the actual end-to-end user experience, not unit tests for hypothetical fixes
   - Use real services and APIs where possible (not mocks)
   - Verify the issue occurs in the real system as described in the issue
-  - Example: For email threading issues, actually send emails and verify they appear as new messages vs replies
+  - Example: For messaging threading issues, actually send messages and verify they appear as new messages vs replies
 - Run the test cases to ensure they fail (demonstrating the issue exists)
 - Flip issue to 'status:needs-review' and remove 'status:wip'
 
@@ -63,12 +63,12 @@ If workflow actions or reviewer feedback indicates more work is needed, ensure t
 
 ### Good: Comprehensive Testing Process
 ```
-Issue #84: "Fix calendar sync timeout"
-1. ✅ Identified: Issue #84, branch feature/84-fix-sync
+Issue #84: "Fix API integration timeout"
+1. ✅ Identified: Issue #84, branch feature/84-fix-api
 2. ✅ Phase: Set phase:tests, PR created
 3. ✅ Environment: User ran prep-issue.sh, ready to work
 4. ✅ Location: Working in prepared workspace with Serena indexing
-5. ✅ RFC Review: Read docs/rfcs/84-fix-sync-timeout.md
+5. ✅ RFC Review: Read docs/rfcs/84-fix-api-timeout.md
 6. ✅ Analysis: Determined need to add timeout tests
 7. ✅ Test Creation: Added test cases for timeout scenarios
 8. ✅ Failure Verification: Confirmed tests fail before fix
@@ -79,7 +79,7 @@ Result: Comprehensive test coverage with proper structure
 
 ### Bad: Incomplete Testing Process
 ```
-Issue #84: "Fix calendar sync timeout"
+Issue #84: "Fix API integration timeout"
 1. ✅ Identified: Issue #84
 2. ❌ Skip: Didn't review RFC
 3. ❌ Skip: Started testing without understanding requirements
