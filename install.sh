@@ -45,7 +45,7 @@ echo -e "${BLUE}📥 Installing FRAIM framework...${NC}"
 
 # Download FRAIM from GitHub
 echo "Downloading FRAIM framework..."
-curl -sSL https://raw.githubusercontent.com/mathursrus/Ashley-Calendar-AI/master/FRAIM/install.sh | bash -s -- --repo $(git remote get-url origin | sed 's/.*github.com[:/]\([^/]*\/[^/]*\).*/\1/' | sed 's/\.git$//')
+curl -sSL https://raw.githubusercontent.com/mathursrus/FRAIM/master/install.sh | bash -s -- --repo $(git remote get-url origin | sed 's/.*github.com[:/]\([^/]*\/[^/]*\).*/\1/' | sed 's/\.git$//')
 
 echo -e "\n${GREEN}✅ FRAIM installation complete!${NC}"
 echo -e "\n${BLUE}🚀 Next steps:${NC}"
@@ -53,6 +53,6 @@ echo "1. Review the FRAIM folder that was created"
 echo "2. Run: npx @fraim/framework init"
 echo "3. Start managing your AI agents with RIGOR methodology!"
 echo -e "\n${BLUE}📚 Learn more:${NC}"
-echo "Documentation: https://github.com/mathursrus/Ashley-Calendar-AI/tree/master/FRAIM"
+echo "Documentation: https://github.com/mathursrus/FRAIM"
 echo -e "\n${GREEN}🎯 Ready to become an AI manager?${NC}"
 echo "The FRAIM framework is now installed and ready to use!"

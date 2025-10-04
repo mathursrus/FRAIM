@@ -160,17 +160,17 @@ npx @fraim/framework init
 ### Primary
 - **NPX**: `npx @fraim/framework`
 - **Python**: `pip install fraim-framework`
-- **GitHub**: `https://github.com/mathursrus/Ashley-Calendar-AI/tree/master/FRAIM`
+- **GitHub**: `https://github.com/mathursrus/FRAIM`
 
 ### Documentation
 - **Main Docs**: `https://fraim.dev`
-- **GitHub Wiki**: `https://github.com/mathursrus/Ashley-Calendar-AI/wiki`
-- **Examples**: `https://github.com/mathursrus/Ashley-Calendar-AI/tree/master/FRAIM/examples`
+- **GitHub Wiki**: `https://github.com/mathursrus/FRAIM/wiki`
+- **Examples**: `https://github.com/mathursrus/FRAIM/tree/master/examples`
 
 ### Support
-- **Issues**: `https://github.com/mathursrus/Ashley-Calendar-AI/issues`
-- **Discussions**: `https://github.com/mathursrus/Ashley-Calendar-AI/discussions`
-- **Community**: `https://github.com/mathursrus/Ashley-Calendar-AI/community`
+- **Issues**: `https://github.com/mathursrus/FRAIM/issues`
+- **Discussions**: `https://github.com/mathursrus/FRAIM/discussions`
+- **Community**: `https://github.com/mathursrus/FRAIM/community`
 
 ## 🎯 Next Steps
 

@@ -2,10 +2,6 @@ import dotenv from 'dotenv';
 dotenv.config({override:true});
 
 import { test } from 'node:test';
-import { setLogLevel } from './baml_client/config';
-
-// Set BAML log level to error to reduce noise
-setLogLevel('error');
 
 
 // Base test case interface that all test cases should extend
