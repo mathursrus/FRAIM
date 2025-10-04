@@ -99,14 +99,14 @@ Result: Wasted resources, false confidence
 
 ### Good: Simple Solution
 ```
-Issue: "Add error message for invalid email"
+Issue: "Add error message for invalid input"
 Action: Added single validation check with clear error message
 Result: Clean, focused solution
 ```
 
 ### Bad: Complex Solution
 ```
-Issue: "Add error message for invalid email"
+Issue: "Add error message for invalid input"
 Action: Built comprehensive validation framework with multiple error types, internationalization, and complex state management
 Result: Over-engineered for simple requirement
 ```

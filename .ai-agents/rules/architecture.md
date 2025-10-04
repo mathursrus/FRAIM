@@ -43,7 +43,7 @@ const sentiment = await analyzeSentiment(feedback);
 ```typescript
 // Good: Use deterministic code for business logic
 const user = await userService.findById(userId);
-const isValid = validateEmailFormat(email);
+const isValid = validateInputFormat(input);
 const result = await paymentService.processPayment(amount);
 ```
 
@@ -61,9 +61,9 @@ interface TokenService {
 }
 
 // Service-specific implementations
-class EmailTokenService extends TokenService {
-  async saveEmailTokens(tokens: EmailTokens) {
-    return this.saveTokens('email', tokens);
+class MessageTokenService extends TokenService {
+  async saveMessageTokens(tokens: MessageTokens) {
+    return this.saveTokens('message', tokens);
   }
 }
 ```
@@ -93,25 +93,25 @@ class UserService implements ServiceBase<User> {
 }
 ```
 
-## MULTI-TENANT ARCHITECTURE
+## MULTI-USER ARCHITECTURE
 
-### Tenant Isolation
-**Pattern**: Context-aware services with tenant-specific data isolation
+### User Isolation
+**Pattern**: Context-aware services with user-specific data isolation
 
 ```typescript
-// Tenant context pattern
-interface TenantContext {
-  tenantId: string;
+// User context pattern
+interface UserContext {
+  userId: string;
   permissions: Permission[];
   metadata: Record<string, any>;
 }
 
-// Tenant-aware service base
-abstract class TenantAwareService {
-  constructor(protected context: TenantContext) {}
+// User-aware service base
+abstract class UserAwareService {
+  constructor(protected context: UserContext) {}
   
-  protected validateTenantAccess(resourceId: string): boolean {
-    // Implement tenant-specific access validation
+  protected validateUserAccess(resourceId: string): boolean {
+    // Implement user-specific access validation
   }
 }
 ```
@@ -119,40 +119,40 @@ abstract class TenantAwareService {
 ### Data Isolation Patterns
 **Strategies for maintaining data separation**:
 
-1. **Database Level**: Separate databases per tenant
-2. **Schema Level**: Separate schemas with tenant prefix
-3. **Row Level**: Tenant ID in every table with RLS policies
+1. **Database Level**: Separate databases per user organization
+2. **Schema Level**: Separate schemas with user prefix
+3. **Row Level**: User ID in every table with RLS policies
 4. **Application Level**: Service-layer filtering
 
 ```typescript
 // Row-level security pattern
-class TenantAwareRepository<T> {
-  async findByTenant(tenantId: string, filters: any): Promise<T[]> {
+class UserAwareRepository<T> {
+  async findByUser(userId: string, filters: any): Promise<T[]> {
     return this.database.query(`
       SELECT * FROM ${this.tableName} 
-      WHERE tenant_id = $1 AND ${this.buildFilters(filters)}
-    `, [tenantId]);
+      WHERE user_id = $1 AND ${this.buildFilters(filters)}
+    `, [userId]);
   }
 }
 ```
 
-### Multi-Tenant Services
-**Pattern**: Services that handle multiple tenants with proper isolation
+### Multi-User Services
+**Pattern**: Services that handle multiple users with proper isolation
 
 ```typescript
-// Multi-tenant service pattern
-class MultiTenantEmailService {
-  async processEmailsForTenant(tenantId: string): Promise<void> {
-    const tenantConfig = await this.getTenantConfig(tenantId);
-    const emails = await this.getEmailsForTenant(tenantId);
+// Multi-user service pattern
+class MultiUserNotificationService {
+  async processNotificationsForUser(userId: string): Promise<void> {
+    const userConfig = await this.getUserConfig(userId);
+    const notifications = await this.getNotificationsForUser(userId);
     
-    for (const email of emails) {
-      await this.processEmail(email, tenantConfig);
+    for (const notification of notifications) {
+      await this.processNotification(notification, userConfig);
     }
   }
   
-  private async getTenantConfig(tenantId: string): Promise<TenantConfig> {
-    // Retrieve tenant-specific configuration
+  private async getUserConfig(userId: string): Promise<UserConfig> {
+    // Retrieve user-specific configuration
   }
 }
 ```
@@ -210,7 +210,7 @@ describe('UserService', () => {
   });
   
   it('should create user with valid data', async () => {
-    const userData = { email: 'test@example.com', name: 'Test User' };
+    const userData = { username: 'testuser', name: 'Test User' };
     mockDatabase.create.mockResolvedValue(userData);
     
     const result = await userService.create(userData);
@@ -226,20 +226,20 @@ describe('UserService', () => {
 
 ```typescript
 // Integration test pattern
-describe('EmailService Integration', () => {
-  let emailService: EmailService;
+describe('NotificationService Integration', () => {
+  let notificationService: NotificationService;
   let testDatabase: TestDatabase;
   
   beforeAll(async () => {
     testDatabase = await setupTestDatabase();
-    emailService = new EmailService(testDatabase);
+    notificationService = new NotificationService(testDatabase);
   });
   
   afterAll(async () => {
     await testDatabase.cleanup();
   });
   
-  it('should process email workflow end-to-end', async () => {
+  it('should process notification workflow end-to-end', async () => {
     // Test complete workflow with real database
   });
 });
@@ -319,7 +319,7 @@ class AuthService {
       
       return {
         userId: user.id,
-        tenantId: user.tenantId,
+        organizationId: user.organizationId,
         roles: user.roles,
         permissions: await this.getPermissions(user.roles)
       };
@@ -342,9 +342,9 @@ class AuthService {
 ```typescript
 // Validation service pattern
 class ValidationService {
-  static validateEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  static validateUsername(username: string): boolean {
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    return usernameRegex.test(username);
   }
   
   static sanitizeInput(input: string): string {

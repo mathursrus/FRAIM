@@ -71,23 +71,23 @@ git push origin <your-feature-branch> --force-with-lease
        **Scenario 1: Same function, different implementations**
        ```typescript
        <<<<<<< HEAD (your changes)
-       async function processEmail(email: string) {
+       async function processMessage(message: string) {
          // Your new implementation
-         return await this.emailService.process(email);
+         return await this.messageService.process(message);
        }
        =======
-       async function processEmail(email: string) {
+       async function processMessage(message: string) {
          // Master's updated implementation  
-         return await this.emailService.processWithValidation(email);
+         return await this.messageService.processWithValidation(message);
        }
        >>>>>>> origin/master
        ```
        
        **Resolution:** Keep master's version + add your enhancements
        ```typescript
-       async function processEmail(email: string) {
+       async function processMessage(message: string) {
          // Master's base implementation
-         const result = await this.emailService.processWithValidation(email);
+         const result = await this.messageService.processWithValidation(message);
          // Your additional logic
          return await this.enhanceResult(result);
        }
