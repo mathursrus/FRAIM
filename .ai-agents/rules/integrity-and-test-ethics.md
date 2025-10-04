@@ -195,7 +195,7 @@ npm run build
 # Must show: Successful completion
 
 # 3. EXISTING TEST EXECUTION (MANDATORY)
-npx baml-cli test --include "*"
+npm test -- --include "*"
 # Must show: All existing tests pass
 
 # 4. EVIDENCE DOCUMENTATION (MANDATORY)
