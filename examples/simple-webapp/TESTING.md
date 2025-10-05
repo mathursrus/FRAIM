@@ -11,92 +11,27 @@ The example test file (`example-test.ts`) demonstrates:
 - **Test Organization**: Tests are organized by functionality and complexity
 - **Mock Functions**: Example mock functions for common scenarios
 
-## Available Test Tags
+## Recommended Test Tags (you can add others to your preference)
 
 - **`smoke`**: Critical tests that must pass for basic functionality
-- **`basic`**: Basic functionality tests
-- **`auth`**: Authentication-related tests
-- **`integration`**: Integration tests with external services
-- **`api`**: API-specific tests
-- **`database`**: Database operation tests
-- **`performance`**: Performance and benchmark tests
 - **`flaky`**: Tests that may be unreliable or environment-dependent
 - **`failing`**: Tests that are currently failing and need debugging
-- **`debug`**: Tests used for debugging purposes
 
 ## Running Tests
 
 ### Run All Tests
 ```bash
-npx tsx example-test.ts
+npx run test example-test.ts
 ```
 
 ### Run Only Smoke Tests
 ```bash
-npx tsx example-test.ts --tags=smoke
+npx run test-smoke example-test.ts
 ```
 
-### Run Integration Tests
+### Run Only Flaky Tests
 ```bash
-npx tsx example-test.ts --tags=integration
-```
-
-### Run Multiple Tag Types
-```bash
-npx tsx example-test.ts --tags=smoke,integration
-```
-
-### Exclude Flaky Tests
-```bash
-EXCLUDE_TAGS=flaky npx tsx example-test.ts
-```
-
-### Using npm Scripts (if configured)
-```bash
-npm run test-smoke example-test.ts
-npm run test-flaky example-test.ts
-npm run test-failing example-test.ts
-```
-
-## Test Case Examples
-
-### Smoke Test
-```typescript
-{
-  name: 'test_basic_functionality',
-  tags: ['smoke', 'basic'],
-  description: 'Should verify basic application functionality works',
-  testFunction: async () => {
-    // Critical functionality test
-    return true;
-  }
-}
-```
-
-### Integration Test
-```typescript
-{
-  name: 'test_api_integration',
-  tags: ['integration', 'api'],
-  description: 'Should verify API integration works correctly',
-  testFunction: async () => {
-    // Test external API integration
-    return true;
-  }
-}
-```
-
-### Performance Test
-```typescript
-{
-  name: 'test_performance_benchmark',
-  tags: ['performance', 'flaky'],
-  description: 'Should verify performance meets requirements',
-  testFunction: async () => {
-    // Performance benchmark test
-    return true;
-  }
-}
+npx run test-flkay *test*.ts
 ```
 
 ## Best Practices
@@ -112,8 +47,7 @@ npm run test-failing example-test.ts
 
 This testing framework integrates with FRAIM's agent coordination system:
 
-- **Cursor**: Uses these tests during implementation phase
-- **Windsurf**: Uses these tests during testing and optimization phases
+- **AI Agents**: Use these tests during implementation phase
 - **CI/CD**: Automated test execution with proper tagging
 - **Evidence Collection**: Test results are collected as evidence for reviews
 

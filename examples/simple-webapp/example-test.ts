@@ -183,9 +183,4 @@ const runExampleTest = async (testCase: ExampleTestCase): Promise<boolean> => {
   }
 };
 
-// Run the tests
-if (require.main === module) {
-  runTests(EXAMPLE_TEST_CASES, runExampleTest, 'Example Test Suite');
-}
-
-export { EXAMPLE_TEST_CASES, runExampleTest };
+await runTests(EXAMPLE_TEST_CASES, runExampleTest, 'Example Test Suite');
