@@ -81,26 +81,40 @@ function createGitHubLabels() {
         // We're in a git repo, run the script
         try {
             const { execSync } = require('child_process');
-            execSync('chmod +x .ai-agents/scripts/create-git-labels.sh');
-            execSync('.ai-agents/scripts/create-git-labels.sh labels.json');
+            const os = require('os');
+            
+            if (os.platform() === 'win32') {
+                // Windows: use bash to run the script
+                execSync('bash .ai-agents/scripts/create-git-labels.sh labels.json', { stdio: 'inherit' });
+            } else {
+                // Unix-like: make executable and run
+                execSync('chmod +x .ai-agents/scripts/create-git-labels.sh');
+                execSync('.ai-agents/scripts/create-git-labels.sh labels.json', { stdio: 'inherit' });
+            }
             logSuccess('Created GitHub labels');
         } catch (error) {
             console.log('⚠️  Could not create GitHub labels automatically. Run manually:');
-            console.log('   .ai-agents/scripts/create-git-labels.sh labels.json');
+            if (require('os').platform() === 'win32') {
+                console.log('   bash .ai-agents/scripts/create-git-labels.sh labels.json');
+            } else {
+                console.log('   .ai-agents/scripts/create-git-labels.sh labels.json');
+            }
         }
     } else {
         // Not in a git repo, give instructions
         console.log('📝 Note: Not in a git repository. To create GitHub labels:');
         console.log('   1. Initialize git repo: git init');
         console.log('   2. Create GitHub repo and connect it');
-        console.log('   3. Run: .ai-agents/scripts/create-git-labels.sh labels.json');
+        if (require('os').platform() === 'win32') {
+            console.log('   3. Run: bash .ai-agents/scripts/create-git-labels.sh labels.json');
+        } else {
+            console.log('   3. Run: .ai-agents/scripts/create-git-labels.sh labels.json');
+        }
     }
 }
 
 // Main setup function
 function runSetup() {
-    console.log('🚀 Setting up FRAIM in current repository...\n');
-    
     try {
         // Copy full directories
         const directoriesToCopy = [
@@ -122,8 +136,7 @@ function runSetup() {
         const filesToCopy = [
             'sample_package.json',
             'test-utils.ts',
-            'tsconfig.json',
-            'CODEOWNERS'
+            'tsconfig.json'
         ];
         
         filesToCopy.forEach(file => {
