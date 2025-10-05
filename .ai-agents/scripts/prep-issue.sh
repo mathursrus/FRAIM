@@ -130,7 +130,7 @@ echo "Current directory: $CURRENT_DIR"
 echo "Parent directory: $PARENT_DIR"
 
 # Define clone directory name
-CLONE_DIR="FRAIM - Issue $ISSUE_NUMBER"
+CLONE_DIR="$REPO_NAME - Issue $ISSUE_NUMBER"
 CLONE_PATH="$PARENT_DIR/$CLONE_DIR"
 
 # Check if directory already exists
