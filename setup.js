@@ -96,7 +96,7 @@ function createGitHubLabels() {
             console.log('⚠️  Could not create GitHub labels automatically. Run manually:');
             if (require('os').platform() === 'win32') {
                 console.log('   bash .ai-agents/scripts/create-git-labels.sh labels.json');
-        } else {
+            } else {
                 console.log('   .ai-agents/scripts/create-git-labels.sh labels.json');
             }
         }
