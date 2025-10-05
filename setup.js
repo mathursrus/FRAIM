@@ -69,62 +69,30 @@ function createGitHubLabels() {
     }
     
     const labelsContent = fs.readFileSync(labelsPath, 'utf8');
-    const labels = JSON.parse(labelsContent);
     
-    // Create labels.json in the target directory
+    // Always copy the labels.json file
     fs.writeFileSync('labels.json', labelsContent);
     logSuccess('Created labels.json');
-}
-
-// Create CODEOWNERS file
-function createCodeOwners() {
-    const codeownersContent = `# This file defines the code owners for the repository
-# Code owners are automatically requested for review when someone opens a PR that modifies code they own
-# See: https://docs.github.com/en/repositories/managing-your-codebase-in-github/about-code-owners
-
-# Global ownership - all files
-* @${process.env.USER || 'repo-owner'}
-
-# AI agents rules and workflows
-/.ai-agents/ @${process.env.USER || 'repo-owner'}
-
-# GitHub workflows
-/.github/ @${process.env.USER || 'repo-owner'}
-`;
     
-    fs.writeFileSync('CODEOWNERS', codeownersContent);
-    logSuccess('Created CODEOWNERS file');
-}
-
-// Create PR template
-function createPRTemplate() {
-    const prTemplateContent = `## Summary
-Brief description of changes
-
-## Changes Made
-- [ ] Change 1
-- [ ] Change 2
-
-## Testing
-- [ ] Test 1
-- [ ] Test 2
-
-## Related Issues
-Closes #
-
-## Screenshots (if applicable)
-<!-- Add screenshots here -->
-
-## Checklist
-- [ ] Code follows project style guidelines
-- [ ] Self-review completed
-- [ ] Tests added/updated
-- [ ] Documentation updated
-`;
+    // Check if we're in a git repository
+    const isGitRepo = fs.existsSync('.git') || fs.existsSync('../.git');
     
-    ensureDirectory('.github');
-    fs.writeFileSync('.github/pull_request_template.md', prTemplateContent);
-    logSuccess('Created PR template');
+    if (isGitRepo) {
+        // We're in a git repo, run the script
+        try {
+            const { execSync } = require('child_process');
+            execSync('chmod +x .ai-agents/scripts/create-git-labels.sh');
+            execSync('.ai-agents/scripts/create-git-labels.sh labels.json');
+            logSuccess('Created GitHub labels');
+        } catch (error) {
+            console.log('⚠️  Could not create GitHub labels automatically. Run manually:');
+            console.log('   .ai-agents/scripts/create-git-labels.sh labels.json');
+        }
+    } else {
+        // Not in a git repo, give instructions
+        console.log('📝 To create GitHub labels after initializing git repo, run:');
+        console.log('   .ai-agents/scripts/create-git-labels.sh labels.json');
+    }
 }
 
 // Main setup function
@@ -136,6 +104,8 @@ function runSetup() {
         const directoriesToCopy = [
             '.ai-agents',
             '.github/workflows',
+            '.cursor',
+            '.windsurf',
             'examples'
         ];
         
@@ -150,7 +120,8 @@ function runSetup() {
         const filesToCopy = [
             'sample_package.json',
             'test-utils.ts',
-            'tsconfig.json'
+            'tsconfig.json',
+            'CODEOWNERS'
         ];
         
         filesToCopy.forEach(file => {
@@ -161,8 +132,6 @@ function runSetup() {
         
         // Create special files
         createGitHubLabels();
-        createCodeOwners();
-        createPRTemplate();
         
         console.log('\n✅ FRAIM setup complete!');
         console.log('🎯 Your repository is now ready for AI agent management.');
@@ -170,7 +139,7 @@ function runSetup() {
         console.log('   1. Customize .ai-agents/rules/architecture.md for your project');
         console.log('   2. Update .ai-agents/scripts/cleanup-branch.ts with your cleanup logic');
         console.log('   3. Copy scripts from sample_package.json to your package.json');
-        console.log('   4. Start creating issues with phase labels!');
+        console.log('   4. Start creating issues with ai-agent labels!');
         
     } catch (error) {
         logError(`Setup failed: ${error.message}`);
