@@ -12,7 +12,7 @@
       "test-all-ci": "set EXCLUDE_TAGS=flaky,failing&& tsx --test --test-concurrency=1 --test-reporter tap test*.ts",
       "generate": "baml-cli generate",
       "lint": "eslint *.ts",
-      "lint:fix": "eslint *.ts --fix",
+      "lint:fix": "eslint *.ts --fix"
     }
   }
   
