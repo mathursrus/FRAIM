@@ -20,7 +20,7 @@ detect_editor_from_issue() {
         # Fallback to curl (requires GitHub token in GITHUB_TOKEN env var)
         if [ -n "$GITHUB_TOKEN" ]; then
             local labels=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-                "https://api.github.com/repos/{OWNER}/{REPO}/issues/$issue_num" \
+                "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/issues/$issue_num" \
                 | grep -o '"name":"ai-agent:[^"]*"' | sed 's/"name":"ai-agent://' | sed 's/"//' 2>/dev/null)
         else
             echo "Warning: No GitHub CLI or GITHUB_TOKEN found. Cannot auto-detect editor from issue labels." >&2
@@ -61,18 +61,50 @@ open_editor() {
     esac
 }
 
+# Function to detect repository info from git remotes
+detect_repo_info() {
+    local origin_url=$(git remote get-url origin 2>/dev/null)
+    if [ -n "$origin_url" ]; then
+        # Extract owner/repo from git URL
+        if [[ $origin_url =~ github\.com[:/]([^/]+)/([^/]+)\.git ]]; then
+            REPO_OWNER="${BASH_REMATCH[1]}"
+            REPO_NAME="${BASH_REMATCH[2]}"
+            return 0
+        fi
+    fi
+    return 1
+}
+
 # Check if issue number is provided
 if [ $# -eq 0 ]; then
     echo "Usage: $0 <issue_number> [editor]"
     echo "Example: $0 123 windsurf"
+    echo ""
+    echo "Environment variables:"
+    echo "  GITHUB_REPO_OWNER - GitHub repository owner (auto-detected from git if not set)"
+    echo "  GITHUB_REPO_NAME  - GitHub repository name (auto-detected from git if not set)"
     exit 1
 fi
 
 ISSUE_NUMBER=$1
 EDITOR=${2:-""}  # Will be set later if not provided
 
+# Detect or set repository info
+if [ -n "$GITHUB_REPO_OWNER" ] && [ -n "$GITHUB_REPO_NAME" ]; then
+    REPO_OWNER="$GITHUB_REPO_OWNER"
+    REPO_NAME="$GITHUB_REPO_NAME"
+    echo "Using repository from environment: $REPO_OWNER/$REPO_NAME"
+elif detect_repo_info; then
+    echo "Auto-detected repository: $REPO_OWNER/$REPO_NAME"
+else
+    echo "Error: Could not detect repository info."
+    echo "Please set GITHUB_REPO_OWNER and GITHUB_REPO_NAME environment variables."
+    echo "Or run this script from within a git repository with a GitHub origin remote."
+    exit 1
+fi
+
 echo "=== Project Issue Preparation ==="
-echo "Preparing for Issue #$ISSUE_NUMBER"
+echo "Preparing for Issue #$ISSUE_NUMBER in $REPO_OWNER/$REPO_NAME"
 echo
 
 # Auto-detect editor from issue labels if not provided
@@ -114,7 +146,7 @@ else
 
 # Clone the repository
 echo "Cloning to: $CLONE_PATH"
-git clone https://github.com/mathursrus/FRAIM.git "$CLONE_DIR"
+git clone "https://github.com/$REPO_OWNER/$REPO_NAME.git" "$CLONE_DIR"
 
 # Change into the cloned repository
 cd "$CLONE_DIR"
