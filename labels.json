@@ -1,77 +1,47 @@
 [
   {
-    "name": "aiagents",
-    "color": "0e8a16",
-    "description": "Issue prepared for AI agent collaboration"
-  },
-  {
-    "name": "status:ready-for-design",
+    "name": "phase:design",
     "color": "0075ca",
-    "description": "Issue is ready for design phase"
+    "description": "Design and RFC creation phase"
   },
   {
-    "name": "status:in-design",
-    "color": "0075ca",
-    "description": "Issue is currently in design phase"
-  },
-  {
-    "name": "status:ready-for-implementation",
+    "name": "phase:impl",
     "color": "7057ff",
-    "description": "Issue is ready for implementation phase"
+    "description": "Implementation and development phase"
   },
   {
-    "name": "status:in-implementation",
-    "color": "7057ff",
-    "description": "Issue is currently in implementation phase"
-  },
-  {
-    "name": "status:ready-for-testing",
+    "name": "phase:tests",
     "color": "008672",
-    "description": "Issue is ready for testing phase"
+    "description": "Testing and validation phase"
   },
   {
-    "name": "status:in-testing",
-    "color": "008672",
-    "description": "Issue is currently in testing phase"
-  },
-  {
-    "name": "status:test-exempt",
-    "color": "c5def5",
-    "description": "Implementation is exempt from test requirements"
-  },
-  {
-    "name": "status:blocked",
-    "color": "d73a4a",
-    "description": "Issue is blocked by another issue or external factor"
+    "name": "status:wip",
+    "color": "fbca04",
+    "description": "Work in progress"
   },
   {
     "name": "status:needs-review",
     "color": "fbca04",
-    "description": "Issue or PR needs review"
+    "description": "Ready for review"
   },
   {
-    "name": "status:approved",
+    "name": "status:complete",
     "color": "0e8a16",
-    "description": "Issue or PR has been approved"
+    "description": "Work completed"
   },
   {
-    "name": "status:needs-revision",
-    "color": "d93f0b",
-    "description": "Issue or PR needs revision based on feedback"
-  },
-  {
-    "name": "priority:high",
-    "color": "d93f0b",
-    "description": "High priority issue"
-  },
-  {
-    "name": "priority:medium",
-    "color": "fbca04",
-    "description": "Medium priority issue"
-  },
-  {
-    "name": "priority:low",
+    "name": "ai-agent:cursor",
     "color": "c5def5",
-    "description": "Low priority issue"
+    "description": "Assigned to Cursor"
+  },
+  {
+    "name": "ai-agent:claude",
+    "color": "c5def5",
+    "description": "Assigned to Claude"
+  },
+  {
+    "name": "ai-agent:windsurf",
+    "color": "c5def5",
+    "description": "Assigned to Windsurf"
   }
 ]
