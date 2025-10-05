@@ -1,6 +1,6 @@
 {
   "name": "fraim-framework",
-  "version": "2.0.10",
+  "version": "2.0.11",
   "description": "FRAIM v2: Framework for Rigor-based AI Management - Transform from solo developer to AI manager orchestrating production-ready code with enterprise-grade discipline",
   "main": "index.js",
   "bin": {
@@ -51,6 +51,9 @@
   },
   "files": [
     ".ai-agents/",
+    ".cursor/",
+    ".windsurf/",
+    "agents/",
     ".github/",
     "examples/",
     "bin/",
