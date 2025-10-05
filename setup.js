@@ -208,7 +208,7 @@ THIS IS THE MOST CRITICAL RULE. Be ethical, truthful, honest above all.
 - **Accessibility**: Consider accessibility implications in all designs
 - **Documentation**: Document known limitations and issues
 - **Attribution**: Properly attribute external code sources and inspirations`;
-    writeFile('rules/integrity-and-test-ethics.md', integrityContent);
+    writeFile('.ai-agents/rules/integrity-and-test-ethics.md', integrityContent);
     logSuccess('Created integrity-and-test-ethics.md');
 
     // Create simplicity.md
@@ -238,7 +238,7 @@ Keep solutions simple and focused, avoid over-engineering.
 - Avoid making unrelated changes
 - File separate issues for other problems you discover
 - Keep the scope narrow and well-defined`;
-    writeFile('rules/simplicity.md', simplicityContent);
+    writeFile('.ai-agents/rules/simplicity.md', simplicityContent);
     logSuccess('Created simplicity.md');
 
     // Create architecture.md
@@ -268,7 +268,7 @@ Maintain clean architectural boundaries by using appropriate technologies for ea
 - Use deterministic code for business logic and data processing
 - Select appropriate data storage technologies based on access patterns
 - Choose UI frameworks based on application requirements and team expertise`;
-    writeFile('rules/architecture.md', architectureContent);
+    writeFile('.ai-agents/rules/architecture.md', architectureContent);
     logSuccess('Created architecture.md');
 
     // Create continuous-learning.md
@@ -299,7 +299,7 @@ Prevent repeating past mistakes by systematically learning from retrospectives, 
 - Check knowledge base for relevant patterns and anti-patterns
 - Document new learnings after completing work
 - Share insights with the team through appropriate channels`;
-    writeFile('rules/continuous-learning.md', continuousLearningContent);
+    writeFile('.ai-agents/rules/continuous-learning.md', continuousLearningContent);
     logSuccess('Created continuous-learning.md');
 
     // Create successful-debugging-patterns.md
@@ -332,7 +332,7 @@ Debug issues systematically and convert learnings into test cases.
 - Break complex issues into smaller, testable components
 - Document the debugging process and findings
 - Create regression tests that would have caught the issue`;
-    writeFile('rules/successful-debugging-patterns.md', debuggingContent);
+    writeFile('.ai-agents/rules/successful-debugging-patterns.md', debuggingContent);
     logSuccess('Created successful-debugging-patterns.md');
 }
 
@@ -382,7 +382,7 @@ This workflow guides the design phase for new features or significant changes.
 - Comprehensive RFC document
 - Updated issue with implementation tasks
 - Design approval from stakeholders`;
-    writeFile('workflows/design.md', designContent);
+    writeFile('.ai-agents/workflows/design.md', designContent);
     logSuccess('Created design.md workflow');
 
     // Create implement.md
@@ -432,7 +432,7 @@ This workflow guides the implementation phase after design approval.
 - Comprehensive test coverage
 - Updated documentation
 - Pull request ready for review`;
-    writeFile('workflows/implement.md', implementContent);
+    writeFile('.ai-agents/workflows/implement.md', implementContent);
     logSuccess('Created implement.md workflow');
 
     // Create test.md
@@ -484,7 +484,7 @@ This workflow guides the testing phase to ensure quality and reliability.
 - Test evidence documentation
 - Test coverage report
 - Stakeholder approval of test results`;
-    writeFile('workflows/test.md', testContent);
+    writeFile('.ai-agents/workflows/test.md', testContent);
     logSuccess('Created test.md workflow');
 
     // Create resolve.md
@@ -541,7 +541,7 @@ This workflow guides the process of resolving issues and bugs.
 - Fixed implementation
 - Tests that prevent regression
 - Documentation of the resolution`;
-    writeFile('workflows/resolve.md', resolveContent);
+    writeFile('.ai-agents/workflows/resolve.md', resolveContent);
     logSuccess('Created resolve.md workflow');
 
     // Create retrospect.md
@@ -593,26 +593,23 @@ This workflow guides the process of conducting retrospectives after completing s
 - Action items with owners and deadlines
 - Updated processes and guidelines
 - Knowledge sharing with the team`;
-    writeFile('workflows/retrospect.md', retrospectContent);
+    writeFile('.ai-agents/workflows/retrospect.md', retrospectContent);
     logSuccess('Created retrospect.md workflow');
 }
 
 // Create project structure
 function createProjectStructure() {
     // Create directories
-    ensureDirectory('retrospectives');
-    ensureDirectory('docs/rfcs');
-    ensureDirectory('rules');
-    ensureDirectory('templates/evidence');
-    ensureDirectory('templates/retrospective');
-    ensureDirectory('templates/specs');
-    ensureDirectory('templates/help');
-    ensureDirectory('workflows');
+    ensureDirectory('.ai-agents/rules');
+    ensureDirectory('.ai-agents/workflows');
+    ensureDirectory('.ai-agents/templates/evidence');
+    ensureDirectory('.ai-agents/templates/retrospective');
+    ensureDirectory('.ai-agents/templates/specs');
+    ensureDirectory('.ai-agents/templates/help');
+    ensureDirectory('.ai-agents/scripts');
+    ensureDirectory('examples/simple-webapp');
     ensureDirectory('.github/workflows');
-    ensureDirectory('agents/cursor');
-    ensureDirectory('agents/claude');
-    ensureDirectory('agents/windsurf');
-    ensureDirectory('scripts');
+    ensureDirectory('docs');
     
     logSuccess('Created directory structure');
 
@@ -624,8 +621,8 @@ function createProjectStructure() {
 - Could be new tests that need to be added into an existing test suite
 - Could be a new test suite
 `;
-    writeFile('docs/rfcs/BUGFIX-TEMPLATE.md', bugfixTemplate);
-    logSuccess('Created BUGFIX-TEMPLATE.md');
+    writeFile('.ai-agents/templates/specs/BUGSPEC-TEMPLATE.md', bugfixTemplate);
+    logSuccess('Created BUGSPEC-TEMPLATE.md');
 
     // Create RFC template
     const rfcTemplate = `# RFC: <Title>
@@ -644,16 +641,20 @@ Owner: <agent>
 - Unit: modules & edge cases
 - Integration: API <-> DB <-> external
 - E2E: user flows (happy/sad)`;
-    writeFile('docs/rfcs/RFC-TEMPLATE.md', rfcTemplate);
-    logSuccess('Created RFC-TEMPLATE.md');
+    writeFile('.ai-agents/templates/specs/FEATURESPEC-TEMPLATE.md', rfcTemplate);
+    logSuccess('Created FEATURESPEC-TEMPLATE.md');
 
-    // Create basic rule files
-    createRuleFiles();
+    // Copy all rule files from the package
+    copyRuleFiles();
     logSuccess('Created rule files');
 
     // Create workflow templates
     createWorkflowTemplates();
     logSuccess('Created workflow templates');
+    
+    // Copy additional files
+    copyAdditionalFiles();
+    logSuccess('Copied additional files');
 
     // Create basic CODEOWNERS file
     const codeownersContent = `# This file defines the code owners for the repository
@@ -802,6 +803,180 @@ Owner: <agent>
 ]`;
     writeFile('labels.json', labelsContent);
     logSuccess('Created labels.json');
+}
+
+// Copy rule files from the package
+function copyRuleFiles() {
+    const fs = require('fs');
+    const path = require('path');
+    
+    // List of rule files to copy
+    const ruleFiles = [
+        'agent-testing-guidelines.md',
+        'architecture.md', 
+        'communication.md',
+        'continuous-learning.md',
+        'git-safe-commands.md',
+        'integrity-and-test-ethics.md',
+        'local-development.md',
+        'merge-requirements.md',
+        'pr-workflow-completeness.md',
+        'simplicity.md',
+        'software-development-lifecycle.md',
+        'spike-first-development.md',
+        'successful-debugging-patterns.md'
+    ];
+    
+    // Copy each rule file
+    ruleFiles.forEach(file => {
+        try {
+            const sourcePath = path.join(__dirname, '.ai-agents', 'rules', file);
+            const destPath = path.join('.ai-agents', 'rules', file);
+            
+            if (fs.existsSync(sourcePath)) {
+                fs.copyFileSync(sourcePath, destPath);
+                logSuccess(`Copied ${file}`);
+            } else {
+                console.log(`⚠️  Warning: ${file} not found in package`);
+            }
+        } catch (error) {
+            console.log(`⚠️  Warning: Could not copy ${file}: ${error.message}`);
+        }
+    });
+    
+    // Copy workflow files
+    const workflowFiles = [
+        'design.md',
+        'implement.md', 
+        'resolve.md',
+        'retrospect.md',
+        'spec.md',
+        'test.md'
+    ];
+    
+    workflowFiles.forEach(file => {
+        try {
+            const sourcePath = path.join(__dirname, '.ai-agents', 'workflows', file);
+            const destPath = path.join('.ai-agents', 'workflows', file);
+            
+            if (fs.existsSync(sourcePath)) {
+                fs.copyFileSync(sourcePath, destPath);
+                logSuccess(`Copied ${file}`);
+            } else {
+                console.log(`⚠️  Warning: ${file} not found in package`);
+            }
+        } catch (error) {
+            console.log(`⚠️  Warning: Could not copy ${file}: ${error.message}`);
+        }
+    });
+    
+    // Copy template files
+    const templateFiles = [
+        'templates/evidence/Design-Evidence.md',
+        'templates/evidence/Implementation-BugEvidence.md', 
+        'templates/evidence/Implementation-FeatureEvidence.md',
+        'templates/evidence/Spec-Evidence.md',
+        'templates/help/HelpNeeded.md',
+        'templates/retrospective/RETROSPECTIVE-TEMPLATE.md',
+        'templates/specs/BUGSPEC-TEMPLATE.md',
+        'templates/specs/FEATURESPEC-TEMPLATE.md',
+        'templates/specs/TECHSPEC-TEMPLATE.md'
+    ];
+    
+    templateFiles.forEach(file => {
+        try {
+            const sourcePath = path.join(__dirname, '.ai-agents', file);
+            const destPath = path.join('.ai-agents', file);
+            
+            if (fs.existsSync(sourcePath)) {
+                fs.copyFileSync(sourcePath, destPath);
+                logSuccess(`Copied ${file}`);
+            } else {
+                console.log(`⚠️  Warning: ${file} not found in package`);
+            }
+        } catch (error) {
+            console.log(`⚠️  Warning: Could not copy ${file}: ${error.message}`);
+        }
+    });
+    
+    // Copy script files
+    const scriptFiles = [
+        'scripts/cleanup-branch.ts',
+        'scripts/exec-with-timeout.ts',
+        'scripts/prep-issue.sh'
+    ];
+    
+    scriptFiles.forEach(file => {
+        try {
+            const sourcePath = path.join(__dirname, '.ai-agents', file);
+            const destPath = path.join('.ai-agents', file);
+            
+            if (fs.existsSync(sourcePath)) {
+                fs.copyFileSync(sourcePath, destPath);
+                logSuccess(`Copied ${file}`);
+            } else {
+                console.log(`⚠️  Warning: ${file} not found in package`);
+            }
+        } catch (error) {
+            console.log(`⚠️  Warning: Could not copy ${file}: ${error.message}`);
+        }
+    });
+}
+
+// Copy additional files
+function copyAdditionalFiles() {
+    const fs = require('fs');
+    const path = require('path');
+    
+    // Copy sample files
+    const additionalFiles = [
+        'sample_package.json',
+        'test-utils.ts',
+        'tsconfig.json'
+    ];
+    
+    additionalFiles.forEach(file => {
+        try {
+            const sourcePath = path.join(__dirname, file);
+            const destPath = file;
+            
+            if (fs.existsSync(sourcePath)) {
+                fs.copyFileSync(sourcePath, destPath);
+                logSuccess(`Copied ${file}`);
+            } else {
+                console.log(`⚠️  Warning: ${file} not found in package`);
+            }
+        } catch (error) {
+            console.log(`⚠️  Warning: Could not copy ${file}: ${error.message}`);
+        }
+    });
+    
+    // Copy examples
+    try {
+        const examplesSource = path.join(__dirname, 'examples', 'simple-webapp');
+        const examplesDest = 'examples/simple-webapp';
+        
+        if (fs.existsSync(examplesSource)) {
+            ensureDirectory(examplesDest);
+            
+            const exampleFiles = [
+                'example-test.ts',
+                'TESTING.md'
+            ];
+            
+            exampleFiles.forEach(file => {
+                const sourcePath = path.join(examplesSource, file);
+                const destPath = path.join(examplesDest, file);
+                
+                if (fs.existsSync(sourcePath)) {
+                    fs.copyFileSync(sourcePath, destPath);
+                    logSuccess(`Copied examples/simple-webapp/${file}`);
+                }
+            });
+        }
+    } catch (error) {
+        console.log(`⚠️  Warning: Could not copy examples: ${error.message}`);
+    }
 }
 
 // Export the main setup function
