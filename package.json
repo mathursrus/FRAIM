@@ -1,7 +1,7 @@
 {
   "name": "fraim-framework",
-  "version": "1.0.12",
-  "description": "FRAIM: Framework for Rigor-based AI Management - Where humans become AI managers through rigorous methodology",
+  "version": "2.0.0",
+  "description": "FRAIM v2: Framework for Rigor-based AI Management - Transform from solo developer to AI manager orchestrating production-ready code with enterprise-grade discipline",
   "main": "index.js",
   "bin": {
     "fraim": "./bin/fraim.js",
@@ -10,7 +10,7 @@
   "scripts": {
     "setup": "node setup.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "echo '🚀 FRAIM installed! Run: npx fraim-framework --help'"
+    "postinstall": "echo '🚀 FRAIM v2 installed! Run: fraim --help'"
   },
   "repository": {
     "type": "git",

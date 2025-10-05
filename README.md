@@ -261,6 +261,38 @@ npm install -g fraim-framework
 fraim init
 ```
 
+### **🔧 Customize for Your Project**
+
+After installation, customize these files for your specific project:
+
+#### **1. Architecture Rules** (`.ai-agents/rules/architecture.md`)
+- **Purpose**: Define your system's architectural patterns and boundaries
+- **Customize**: Replace generic examples with your specific architecture patterns
+- **Example**: Add your database patterns, API structures, service boundaries
+
+#### **2. Branch Cleanup Script** (`.ai-agents/scripts/cleanup-branch.ts`)
+- **Purpose**: Project-specific cleanup when branches are deleted
+- **Customize**: Add your cleanup logic in the `insertYourCodeHere()` method
+- **Example**: Database cleanup, cache invalidation, temporary file removal
+
+#### **3. Package Scripts** (`sample_package.json` → `package.json`)
+- **Purpose**: Testing and build scripts for your project
+- **Adopt**: Copy relevant scripts from `sample_package.json` into your main `package.json`
+- **Customize**: Update test commands, build processes, and framework-specific commands
+- **Example**: Replace `baml-cli generate` with your framework's generate command
+
+#### **4. Test Utilities** (`test-utils.ts` → your project)
+- **Purpose**: Generic test framework with tagging system
+- **Adopt**: Copy `test-utils.ts` into your project and import in your test files
+- **Customize**: Extend `BaseTestCase` interface for your specific test needs
+- **Example**: Create domain-specific test cases using the tagging system
+
+#### **5. Test Structure** (`examples/simple-webapp/example-test.ts`)
+- **Purpose**: Example test cases with proper tagging
+- **Adopt**: Use as a template for your project's test structure
+- **Customize**: Replace with your project's test cases and domain-specific tags
+- **Example**: Add your specific test scenarios and validation patterns
+
 ## 🎯 **The Transformation: From Developer to AI Manager**
 
 ### **Phase 1: Setup (5 minutes)**
@@ -273,19 +305,18 @@ npx fraim-framework init
 
 ### **Phase 2: Issue Management (30 seconds per issue)**
 ```bash
-gh issue create --title "Add user authentication" --label "phase:design"
-# ✅ Structured workflow begins
-# ✅ Clear handoffs defined
-# ✅ Agent assignment handled by phase labels
+gh issue create --title "Add user authentication" --label "ai-agent:cursor"
+# ✅ Git issue is centralized coordination point
+# ✅ Agent assignment handled
+# ✅ Ready for work 
 ```
 
 ### **Phase 3: Orchestrated Development**
 ```bash
-# Spec Phase: Define requirements and user experience
-# Design Phase: Create RFC, validate architecture  
-# Implementation Phase: Implement with mandatory testing
-# Testing Phase: Validate, optimize, ensure quality
-# Result: Production-ready code with full evidence trail
+scripts/development/prep-issue.sh #issue_number
+# ✅ Local clone and new branch created
+# ✅ Coding agent initiated
+# ✅ Tell coding agent which phase it should proceed with 
 ```
 
 ## 🌟 **Why FRAIM is the Future**
@@ -305,7 +336,10 @@ Full visibility into what each agent is doing, with evidence-based validation.
 ### **5. Zero Vendor Lock-in**
 Works with any AI agent (Cursor, Claude, Windsurf, future agents).
 
-## 🎪 **Live Demo: See FRAIM in Action**
+
+## 🚀 **Ready to Transform Your Development?**
+
+### **Start Your AI Management Journey**
 
 ```bash
 # Watch the magic happen
@@ -321,45 +355,11 @@ gh issue edit 123 --remove-label "phase:impl" --add-label "phase:tests"
 # Result: Production-ready feature in 2 hours instead of 2 days
 ```
 
-## 🏆 **What Developers Are Saying**
 
-> *"FRAIM gives me confidence that my AI agents are actually doing quality work. The evidence-based validation means I can trust what they deliver."*
-> 
-> — **Senior Developer using FRAIM**
-
-> *"The structured workflows eliminate the chaos of multiple AI agents stepping on each other. Now they work together like a real team."*
-> 
-> — **Engineering Manager**
-
-> *"The timeout scripts and safe Git commands prevent the hanging issues that used to require constant human intervention."*
-> 
-> — **DevOps Engineer**
-
-## 🚀 **Ready to Transform Your Development?**
-
-### **Start Your AI Management Journey**
-
-```bash
-# Install and initialize FRAIM in your repository
-npm install -g fraim-framework
-fraim init
-
-# Create your first managed issue
-gh issue create --title "My first AI-managed feature" --label "phase:design"
-
-# Watch the orchestration begin
-# → Structured workflows
-# → Evidence-based validation  
-# → Coordinated handoffs
-# → Continuous learning
-# → Production-ready results
-```
 
 ### **Join the Future of Development**
 
 - 🌟 [**GitHub Repository**](https://github.com/mathursrus/FRAIM) - Star us to follow development
-- 📚 [**Documentation**](https://github.com/mathursrus/FRAIM/tree/master/docs) - Deep dive into the methodology
-- 💬 [**Discussions**](https://github.com/mathursrus/FRAIM/discussions) - Connect with other AI managers
 - 🐛 [**Issue Tracker**](https://github.com/mathursrus/FRAIM/issues) - Report bugs or request features
 
 ---
