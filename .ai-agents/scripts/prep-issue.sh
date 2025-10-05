@@ -54,8 +54,18 @@ open_editor() {
                 return 1
             fi
             ;;
+        "claude"|"claudecode")
+        if command -v claude &> /dev/null; then
+            echo "Opening with 'claude' command..."
+            claude .
+        else
+            echo "Claude not found in PATH"
+            return 1
+        fi
+        ;;
         *)
             echo "Unknown editor: $editor"
+            echo "Supported editors: windsurf, claude, claudecode, cursor"
             return 1
             ;;
     esac

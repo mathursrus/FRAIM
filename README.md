@@ -313,7 +313,7 @@ gh issue create --title "Add user authentication" --label "ai-agent:cursor"
 
 ### **Phase 3: Orchestrated Development**
 ```bash
-scripts/development/prep-issue.sh #issue_number
+.ai-agents/scripts/prep-issue.sh #issue_number
 # ✅ Local clone and new branch created
 # ✅ Coding agent initiated
 # ✅ Tell coding agent which phase it should proceed with 
