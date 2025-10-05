@@ -935,10 +935,39 @@ function copyAdditionalFiles() {
         'tsconfig.json'
     ];
     
+    // Copy GitHub workflow files
+    const workflowFiles = [
+        '.github/workflows/ci.yml',
+        '.github/workflows/phase-change.yml',
+        '.github/workflows/status-change.yml',
+        '.github/workflows/sync-on-pr-review.yml'
+    ];
+    
     additionalFiles.forEach(file => {
         try {
             const sourcePath = path.join(__dirname, file);
             const destPath = file;
+            
+            if (fs.existsSync(sourcePath)) {
+                fs.copyFileSync(sourcePath, destPath);
+                logSuccess(`Copied ${file}`);
+            } else {
+                console.log(`⚠️  Warning: ${file} not found in package`);
+            }
+        } catch (error) {
+            console.log(`⚠️  Warning: Could not copy ${file}: ${error.message}`);
+        }
+    });
+    
+    // Copy GitHub workflow files
+    workflowFiles.forEach(file => {
+        try {
+            const sourcePath = path.join(__dirname, file);
+            const destPath = file;
+            
+            // Ensure the .github/workflows directory exists
+            const destDir = path.dirname(destPath);
+            ensureDirectory(destDir);
             
             if (fs.existsSync(sourcePath)) {
                 fs.copyFileSync(sourcePath, destPath);
