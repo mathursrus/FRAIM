@@ -75,7 +75,7 @@ function createGitHubLabels() {
     logSuccess('Created labels.json');
     
     // Check if we're in a git repository
-    const isGitRepo = fs.existsSync('.git') || fs.existsSync('../.git');
+    const isGitRepo = fs.existsSync('.git');
     
     if (isGitRepo) {
         // We're in a git repo, run the script
@@ -90,8 +90,10 @@ function createGitHubLabels() {
         }
     } else {
         // Not in a git repo, give instructions
-        console.log('📝 To create GitHub labels after initializing git repo, run:');
-        console.log('   .ai-agents/scripts/create-git-labels.sh labels.json');
+        console.log('📝 Note: Not in a git repository. To create GitHub labels:');
+        console.log('   1. Initialize git repo: git init');
+        console.log('   2. Create GitHub repo and connect it');
+        console.log('   3. Run: .ai-agents/scripts/create-git-labels.sh labels.json');
     }
 }
 
@@ -103,9 +105,10 @@ function runSetup() {
         // Copy full directories
         const directoriesToCopy = [
             '.ai-agents',
-            '.github/workflows',
             '.cursor',
             '.windsurf',
+            'agents',
+            '.github/workflows',
             'examples'
         ];
         
