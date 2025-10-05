@@ -803,3 +803,29 @@ Owner: <agent>
     writeFile('labels.json', labelsContent);
     logSuccess('Created labels.json');
 }
+
+// Export the main setup function
+function runSetup() {
+    console.log('🚀 Setting up FRAIM in current repository...\n');
+    
+    try {
+        createProjectStructure();
+        console.log('\n✅ FRAIM setup complete!');
+        console.log('🎯 Your repository is now ready for AI agent management.');
+        console.log('📚 Next steps:');
+        console.log('   1. Customize .ai-agents/rules/architecture.md for your project');
+        console.log('   2. Update .ai-agents/scripts/cleanup-branch.ts with your cleanup logic');
+        console.log('   3. Copy scripts from sample_package.json to your package.json');
+        console.log('   4. Start creating issues with phase labels!');
+    } catch (error) {
+        console.error('❌ Setup failed:', error.message);
+        throw error;
+    }
+}
+
+// If this file is run directly, execute setup
+if (require.main === module) {
+    runSetup();
+}
+
+module.exports = { runSetup };
