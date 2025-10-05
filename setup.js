@@ -134,6 +134,7 @@ function runSetup() {
         
         // Copy individual files
         const filesToCopy = [
+            'Claude.md',
             'sample_package.json',
             'test-utils.ts',
             'tsconfig.json'
