@@ -1,5 +1,10 @@
 [
   {
+    "name": "phase:spec",
+    "color": "008672",
+    "description": "Specification creation phase"
+  },
+  {
     "name": "phase:design",
     "color": "0075ca",
     "description": "Design and RFC creation phase"
