@@ -107,7 +107,6 @@ function runSetup() {
             '.ai-agents',
             '.cursor',
             '.windsurf',
-            'agents',
             '.github/workflows',
             'examples'
         ];
